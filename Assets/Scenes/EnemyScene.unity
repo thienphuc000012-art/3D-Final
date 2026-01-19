@@ -318,7 +318,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.98, y: 1.99, z: -12.24}
+  m_LocalPosition: {x: 7.78, y: 1.05, z: -8.32}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -764,9 +764,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9768dee243fe2ce41b07db83b6678130, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnZombieManager
-  zombieWalkPrefab: {fileID: 6634257854025271467, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
-  zombieRunPrefab: {fileID: 6362014200617677948, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
-  zombieBossPrefab: {fileID: 6634257854025271467, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+  zombieWalkPrefabs:
+  - {fileID: 6634257854025271467, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+  - {fileID: 9145049215351041387, guid: 95176e0e160acd246af3e039eaa38ea0, type: 3}
+  zombieRunPrefabs:
+  - {fileID: 6362014200617677948, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+  zombieBossPrefab: {fileID: 7164574499545700251, guid: 2581c8394f1aa5242806c0077a4f717b, type: 3}
   lanes:
   - {fileID: 1618498720}
   - {fileID: 516205711}
