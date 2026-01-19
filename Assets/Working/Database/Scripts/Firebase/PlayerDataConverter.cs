@@ -12,6 +12,7 @@ public static class PlayerDataConverter
             Exp = player.Exp,
             Lv = player.Lv,    
             Wave = player.Wave,
+            Gun = player.Gun,
         };        
 
         return data;

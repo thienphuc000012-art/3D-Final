@@ -24,6 +24,7 @@ public static class AccountFactory
             Exp = 0,
             Lv = 1,
             Wave = 1,
+            Gun = new GunRuntime(),
             IsOnline = false,
             LastLogin = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"),            
         };        

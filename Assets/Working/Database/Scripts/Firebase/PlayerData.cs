@@ -8,7 +8,8 @@ public class PlayerData
     public string Name;
     public int Wave;
     public int Exp;
-    public int Lv;    
+    public int Lv;   
+    public GunRuntime Gun;
     public bool IsOnline;
     public string LastLogin;
     
