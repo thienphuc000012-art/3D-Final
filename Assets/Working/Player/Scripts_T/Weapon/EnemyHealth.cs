@@ -1,16 +1,32 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour, IDamageable
 {
-    public float hp = 50f;
+    public float maxHP = 50f;
+    float currentHP;
+
+    void Start()
+    {
+        currentHP = maxHP;
+    }
 
     public void TakeDamage(float damage)
     {
-        hp -= damage;
+        currentHP -= damage;
+        if (currentHP <= 0)
+            Die();
+    }
 
-        if (hp <= 0)
-        {
-            Destroy(gameObject);
-        }
+    void Die()
+    {
+        WaveManager.Instance.OnEnemyKilled();
+        Invoke(nameof(Respawn), 1.5f);
+        gameObject.SetActive(false);
+    }
+
+    void Respawn()
+    {
+        currentHP = maxHP;
+        gameObject.SetActive(true);
     }
 }

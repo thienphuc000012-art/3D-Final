@@ -7,20 +7,28 @@ public class Gun : MonoBehaviour
     public Transform firePoint;
     public GameObject bulletPrefab;
     public ParticleSystem muzzleFlash;
-    public Color bulletColor = Color.red; // màu đạn của súng này
+
+    public Color bulletColor = Color.red;
+    public Color[] waveBulletColors;
 
     int currentAmmo;
     int reserveAmmo;
     float nextFireTime;
     bool isReloading;
 
-    Camera cam;
+    // Runtime stats (không thay đổi gunData gốc)
+    float currentDamage;
+    float currentFireRate;
+    float currentReloadTime;
+    float currentBulletSpeed;
 
     void Start()
     {
-        cam = Camera.main;
+        ResetGunStats(); // set stats base
         currentAmmo = gunData.magazineSize;
         reserveAmmo = gunData.maxAmmo;
+
+        if (muzzleFlash) { muzzleFlash.Stop(); muzzleFlash.Clear(); }
     }
 
     void Update()
@@ -28,14 +36,10 @@ public class Gun : MonoBehaviour
         if (isReloading) return;
 
         if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
-        {
             Shoot();
-        }
 
         if (Input.GetKeyDown(KeyCode.R))
-        {
             StartCoroutine(Reload());
-        }
     }
 
     void Shoot()
@@ -46,23 +50,18 @@ public class Gun : MonoBehaviour
             return;
         }
 
-        nextFireTime = Time.time + gunData.fireRate;
+        nextFireTime = Time.time + currentFireRate;
         currentAmmo--;
 
         if (muzzleFlash) muzzleFlash.Play();
 
-        // Tạo đạn
-        GameObject bullet = Instantiate(
-            bulletPrefab,
-            firePoint.position,
-            firePoint.rotation
-        );
-
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         Bullet b = bullet.GetComponent<Bullet>();
         if (b != null)
         {
-            b.damage = gunData.damage;
-            b.SetColor(bulletColor); // set màu phát sáng
+            b.damage = currentDamage;
+            b.SetBulletSpeed(currentBulletSpeed);
+            b.SetColor(bulletColor);
         }
     }
 
@@ -72,7 +71,7 @@ public class Gun : MonoBehaviour
             yield break;
 
         isReloading = true;
-        yield return new WaitForSeconds(gunData.reloadTime);
+        yield return new WaitForSeconds(currentReloadTime);
 
         int need = gunData.magazineSize - currentAmmo;
         int load = Mathf.Min(need, reserveAmmo);
@@ -80,5 +79,40 @@ public class Gun : MonoBehaviour
         currentAmmo += load;
         reserveAmmo -= load;
         isReloading = false;
+    }
+
+    // Buff stats theo wave
+    public void ApplyWaveUpgrade(int wave)
+    {
+        if (wave % 5 != 0) return;
+        int waveMultiplier = wave / 5;
+
+        currentDamage = gunData.damage + 5f * waveMultiplier;
+        currentBulletSpeed = gunData.bulletSpeed + 20f * waveMultiplier;
+        currentFireRate = gunData.fireRate * Mathf.Pow(0.9f, waveMultiplier);
+        currentReloadTime = gunData.reloadTime * Mathf.Pow(0.9f, waveMultiplier);
+
+        currentAmmo = gunData.magazineSize;
+
+        if (waveBulletColors != null && waveBulletColors.Length > 0)
+        {
+            int colorIndex = (waveMultiplier - 1) % waveBulletColors.Length;
+            bulletColor = waveBulletColors[colorIndex];
+        }
+
+        Debug.Log($"Gun upgraded! Wave: {wave} | Damage: {currentDamage} | BulletSpeed: {currentBulletSpeed} | FireRate: {currentFireRate} | ReloadTime: {currentReloadTime}");
+    }
+
+    // Reset về stats base
+    public void ResetGunStats()
+    {
+        currentDamage = gunData.damage;
+        currentFireRate = gunData.fireRate;
+        currentReloadTime = gunData.reloadTime;
+        currentBulletSpeed = gunData.bulletSpeed;
+
+        bulletColor = Color.red;
+        currentAmmo = gunData.magazineSize;
+        reserveAmmo = gunData.maxAmmo;
     }
 }
