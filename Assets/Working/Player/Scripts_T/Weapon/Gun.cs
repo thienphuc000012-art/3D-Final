@@ -3,11 +3,17 @@ using System.Collections;
 
 public class Gun : MonoBehaviour
 {
+    [Header("References")]
     public GunData gunData;
     public Transform firePoint;
     public GameObject bulletPrefab;
     public ParticleSystem muzzleFlash;
+    public Camera aimCamera;         
 
+    [Header("Aim")]
+    public float aimRange = 200f;    
+
+    [Header("Visual")]
     public Color bulletColor = Color.red;
     public Color[] waveBulletColors;
 
@@ -16,7 +22,6 @@ public class Gun : MonoBehaviour
     float nextFireTime;
     bool isReloading;
 
-    // Runtime stats (không thay đổi gunData gốc)
     float currentDamage;
     float currentFireRate;
     float currentReloadTime;
@@ -24,11 +29,15 @@ public class Gun : MonoBehaviour
 
     void Start()
     {
-        ResetGunStats(); // set stats base
+        ResetGunStats();
         currentAmmo = gunData.magazineSize;
         reserveAmmo = gunData.maxAmmo;
 
-        if (muzzleFlash) { muzzleFlash.Stop(); muzzleFlash.Clear(); }
+        if (muzzleFlash)
+        {
+            muzzleFlash.Stop();
+            muzzleFlash.Clear();
+        }
     }
 
     void Update()
@@ -55,15 +64,49 @@ public class Gun : MonoBehaviour
 
         if (muzzleFlash) muzzleFlash.Play();
 
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Vector3 targetPoint;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, aimRange))
+        {
+            targetPoint = hit.point;
+        }
+        else
+        {
+            targetPoint = ray.GetPoint(aimRange);
+        }
+
+        Vector3 shootDir = (targetPoint - firePoint.position).normalized;
+        Quaternion bulletRot = Quaternion.LookRotation(shootDir);
+
+        GameObject bullet = Instantiate(
+            bulletPrefab,
+            firePoint.position,
+            bulletRot
+        );
+        Collider playerCol = GetComponentInParent<Collider>();
+        Collider bulletCol = bullet.GetComponent<Collider>();
+
+        if (playerCol != null && bulletCol != null)
+        {
+            Physics.IgnoreCollision(bulletCol, playerCol);
+        }
+
         Bullet b = bullet.GetComponent<Bullet>();
         if (b != null)
         {
             b.damage = currentDamage;
+
+            //SET HƯỚNG BAY
+            b.SetDirection(shootDir);
+
             b.SetBulletSpeed(currentBulletSpeed);
             b.SetColor(bulletColor);
         }
+
+        Debug.DrawRay(firePoint.position, shootDir * aimRange, Color.red, 0.1f);
     }
+
 
     IEnumerator Reload()
     {
@@ -100,7 +143,7 @@ public class Gun : MonoBehaviour
             bulletColor = waveBulletColors[colorIndex];
         }
 
-        Debug.Log($"Gun upgraded! Wave: {wave} | Damage: {currentDamage} | BulletSpeed: {currentBulletSpeed} | FireRate: {currentFireRate} | ReloadTime: {currentReloadTime}");
+        Debug.Log($"Gun upgraded! Wave: {wave}");
     }
 
     // Reset về stats base

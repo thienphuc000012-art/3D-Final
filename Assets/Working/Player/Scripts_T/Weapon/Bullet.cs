@@ -1,19 +1,27 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class Bullet : MonoBehaviour
 {
+    [Header("Stats")]
     public float speed = 60f;
     public float damage = 10f;
     public float lifeTime = 3f;
 
+    [Header("Visual")]
     public Renderer bulletRenderer;
-    private Material bulletMaterial;
 
+    Material bulletMaterial;
     Rigidbody rb;
+
+    Vector3 moveDir;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
         if (bulletRenderer != null)
         {
             bulletMaterial = new Material(bulletRenderer.material);
@@ -24,16 +32,20 @@ public class Bullet : MonoBehaviour
 
     void Start()
     {
-        rb.linearVelocity = transform.forward * speed;
         Destroy(gameObject, lifeTime);
     }
 
-    void OnCollisionEnter(Collision collision)
+    // GỌI TỪ Gun.cs
+    public void SetDirection(Vector3 dir)
     {
-        IDamageable dmg = collision.collider.GetComponent<IDamageable>();
-        if (dmg != null) dmg.TakeDamage(damage);
+        moveDir = dir.normalized;
+        rb.linearVelocity = moveDir * speed;
+    }
 
-        Destroy(gameObject);
+    public void SetBulletSpeed(float newSpeed)
+    {
+        speed = newSpeed;
+        rb.linearVelocity = moveDir * speed;
     }
 
     public void SetColor(Color color)
@@ -45,10 +57,12 @@ public class Bullet : MonoBehaviour
         }
     }
 
-    public void SetBulletSpeed(float newSpeed)
+    void OnCollisionEnter(Collision collision)
     {
-        speed = newSpeed;
-        if (rb != null)
-            rb.linearVelocity = transform.forward * speed;
+        IDamageable dmg = collision.collider.GetComponent<IDamageable>();
+        if (dmg != null)
+            dmg.TakeDamage(damage);
+
+        Destroy(gameObject);
     }
 }
