@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SpawnZombieManager : MonoBehaviour
 {
-    [Header("Zombie Prefabs")]
-    public GameObject zombieWalkPrefab;
-    public GameObject zombieRunPrefab;
+    [Header("Zombie Prefabs Walk/Run")]
+    public GameObject[] zombieWalkPrefabs; // nhiều loại Walk
+    public GameObject[] zombieRunPrefabs;  // nhiều loại Run
     public GameObject zombieBossPrefab;
 
     [Header("Spawn Lanes")]
@@ -18,10 +19,22 @@ public class SpawnZombieManager : MonoBehaviour
     private int zombiesPerWave = 5;
 
     private bool spawning = false;
+    private bool waveEnded = false;
 
     void Start()
     {
         StartCoroutine(StartWave());
+    }
+
+    void Update()
+    {
+        if (waveEnded && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            waveEnded = false;
+            currentWave++;
+            zombiesPerWave += 5;
+            StartCoroutine(StartWave());
+        }
     }
 
     IEnumerator StartWave()
@@ -31,37 +44,39 @@ public class SpawnZombieManager : MonoBehaviour
 
         Debug.Log("=== Bắt đầu Wave " + currentWave + " với " + zombiesToSpawn + " zombie ===");
 
-        // Nếu wave là bội số của 5 thì thêm boss
         bool spawnBoss = (currentWave % 5 == 0);
 
-        // Tính số lượng Walk/Run
-        int walkCount = Mathf.RoundToInt(zombiesToSpawn * 0.6f); // 60% đi bộ
-        int runCount = zombiesToSpawn - walkCount;               // còn lại chạy
+        int walkCount = Mathf.RoundToInt(zombiesToSpawn * 0.6f);
+        int runCount = zombiesToSpawn - walkCount;
 
-        // Tạo danh sách spawn
         List<GameObject> spawnList = new List<GameObject>();
 
-        // Nếu wave có boss thì thêm boss đầu tiên
         if (spawnBoss)
         {
             spawnList.Add(zombieBossPrefab);
-            zombiesToSpawn--; // boss chiếm 1 slot
+            zombiesToSpawn--;
             walkCount = Mathf.RoundToInt(zombiesToSpawn * 0.6f);
             runCount = zombiesToSpawn - walkCount;
         }
 
-        // Thêm Walk trước
+        // Thêm Walk
         for (int i = 0; i < walkCount; i++)
-            spawnList.Add(zombieWalkPrefab);
+        {
+            // chọn ngẫu nhiên prefab Walk
+            GameObject prefab = zombieWalkPrefabs[Random.Range(0, zombieWalkPrefabs.Length)];
+            spawnList.Add(prefab);
+        }
 
-        // Thêm Run sau
+        // Thêm Run
         for (int i = 0; i < runCount; i++)
-            spawnList.Add(zombieRunPrefab);
+        {
+            // chọn ngẫu nhiên prefab Run
+            GameObject prefab = zombieRunPrefabs[Random.Range(0, zombieRunPrefabs.Length)];
+            spawnList.Add(prefab);
+        }
 
-        // Danh sách lane đã dùng
         List<int> usedLanes = new List<int>();
 
-        // Spawn lần lượt theo danh sách
         foreach (GameObject prefab in spawnList)
         {
             int laneIndex;
@@ -82,13 +97,8 @@ public class SpawnZombieManager : MonoBehaviour
         }
 
         spawning = false;
+        waveEnded = true;
 
         Debug.Log("=== Kết thúc Wave " + currentWave + " ===");
-
-        currentWave++;
-        zombiesPerWave += 5;
-
-        yield return new WaitForSeconds(5f);
-        StartCoroutine(StartWave());
     }
 }

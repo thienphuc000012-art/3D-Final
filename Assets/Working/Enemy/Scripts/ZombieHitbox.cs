@@ -5,17 +5,17 @@ public class ZombieHitbox : MonoBehaviour
     public enum HitboxType { Head, Body }
     public HitboxType hitboxType;
 
-    private Health health;
+    private ZombieMovementWithAnim zombie;
 
     void Start()
     {
-        // Lấy Health từ zombie cha
-        health = GetComponentInParent<Health>();
+        // Lấy script zombie cha
+        zombie = GetComponentInParent<ZombieMovementWithAnim>();
     }
 
     public void ApplyDamage(int baseDamage)
     {
-        if (health == null) return;
+        if (zombie == null) return;
 
         int finalDamage = baseDamage;
 
@@ -25,14 +25,7 @@ public class ZombieHitbox : MonoBehaviour
             finalDamage = Mathf.RoundToInt(baseDamage * 2f); // headshot x2 damage
         }
 
-        health.TakeDamage(finalDamage);
+        zombie.TakeDamage(finalDamage); // gọi hàm TakeDamage của zombie
         Debug.Log($"{gameObject.name} nhận {finalDamage} damage ({hitboxType})");
-    }
-
-    // Ví dụ khi player bắn raycast trúng collider này
-    private void OnMouseDown()
-    {
-        // Test: click chuột vào collider để gây damage
-        ApplyDamage(10);
     }
 }

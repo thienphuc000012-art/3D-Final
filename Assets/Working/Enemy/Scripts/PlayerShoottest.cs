@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.InputSystem; // thêm namespace mới
+using UnityEngine.InputSystem;
 
 public class PlayerShoottest : MonoBehaviour
 {
@@ -8,7 +8,6 @@ public class PlayerShoottest : MonoBehaviour
 
     void Update()
     {
-        // Chuột trái click
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());

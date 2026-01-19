@@ -12727,6 +12727,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8757696864070595596}
   - component: {fileID: 2243706178815248756}
+  - component: {fileID: 8118839697471807638}
   m_Layer: 0
   m_Name: bodyhitbox
   m_TagString: Untagged
@@ -12770,6 +12771,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.36, y: 1.6, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8118839697471807638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5501551315393946470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f49c31f06f8175a47b00d9b6fd408903, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieHitbox
+  hitboxType: 1
 --- !u!1 &5547728638361891525
 GameObject:
   m_ObjectHideFlags: 0
@@ -13979,6 +13993,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7335924513875569532}
   - component: {fileID: 5441930223380204679}
+  - component: {fileID: 5695876079492745482}
   m_Layer: 0
   m_Name: headhitbox
   m_TagString: Untagged
@@ -14022,6 +14037,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.26, y: 0.27, z: 0.23}
   m_Center: {x: -0.0032496452, y: 0, z: 0}
+--- !u!114 &5695876079492745482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6043176607398270265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f49c31f06f8175a47b00d9b6fd408903, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieHitbox
+  hitboxType: 0
 --- !u!1 &6052517368282964594
 GameObject:
   m_ObjectHideFlags: 0
@@ -14709,6 +14737,7 @@ GameObject:
   - component: {fileID: 5884509379456321799}
   - component: {fileID: 8711227749442516133}
   - component: {fileID: 8461343357126832047}
+  - component: {fileID: -8935247408821391485}
   m_Layer: 0
   m_Name: Enemy run
   m_TagString: Untagged
@@ -14792,9 +14821,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ZombieMovementWithAnim
   target: {fileID: 0}
   stoppingDistance: 1.5
-  moveSpeed: 2
+  moveSpeed: 1
   maxHealth: 50
   startHealth: 50
+--- !u!114 &-8935247408821391485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6362014200617677948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3e5380b299e5a428f08b3d1f94c7f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
 --- !u!1 &6365254178642065952
 GameObject:
   m_ObjectHideFlags: 0
