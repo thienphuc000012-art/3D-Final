@@ -5,6 +5,7 @@ public class MouseLook : MonoBehaviour
     public Transform playerBody; // Kéo Player_T vào đây
     public float sensitivity = 200f;
     float xRotation = 0f;
+    bool isMouseLocked;
 
     void Start()
     {
@@ -28,6 +29,23 @@ public class MouseLook : MonoBehaviour
         if (playerBody != null)
         {
             playerBody.Rotate(Vector3.up * mouseX);
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isMouseLocked = !isMouseLocked;
+        }
+
+        if(isMouseLocked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 }
