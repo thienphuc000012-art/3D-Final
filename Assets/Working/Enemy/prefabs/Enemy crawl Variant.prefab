@@ -26,7 +26,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3851113221006588203, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
       propertyPath: m_IsTrigger
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4163008420247724930, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
       propertyPath: m_LocalPosition.y
@@ -98,7 +98,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7119691772149232161, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
       propertyPath: m_IsTrigger
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7274176556057894380, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
       propertyPath: m_Avatar
