@@ -11,87 +11,73 @@ public class Gun : MonoBehaviour
     public Camera aimCamera;
 
     [Header("Animation")]
-    public Animator animator;   // Animator Base + Layer override
+    public Animator animator;
 
     [Header("Aim / Look")]
-    public Transform GunHolder;       // Parent gun (vị trí tay)
-    public Transform CameraHolder;    // Object gắn MouseLook
+    public Transform GunHolder;
+    public Transform CameraHolder;
 
-    [Header("Visual")]
+    [Header("Spine & Neck Rotation")]
+    public Transform spineBone; // Kéo xương Spine2 vào
+    public Transform neckBone;  // Kéo xương Neck vào
+    [Range(0f, 1f)]
+    public float spineWeight = 0.3f; // Tỉ lệ lưng gập (0.2 - 0.4 để chân bám đất)
+
+    [Header("Visual & Stats")]
     public Color bulletColor = Color.red;
     public Color[] waveBulletColors;
-
-    [Header("Gun Stats")]
     public float aimRange = 200f;
 
-    [Header("Spine Rotation")]
-    public Transform spineBone; // Kéo xương mixamorig:Spine2 vào đây
-
-    // --- Internal state ---
+    // State nội bộ
     int currentAmmo;
     int reserveAmmo;
     float nextFireTime;
     bool isReloading;
-
-    float currentDamage;
-    float currentFireRate;
-    float currentReloadTime;
-    float currentBulletSpeed;
-
-    // Tốc độ animation Firing/Reload layer
+    float currentDamage, currentFireRate, currentReloadTime, currentBulletSpeed;
     float animSpeedMultiplier = 1f;
 
     void Start()
     {
         ResetGunStats();
-        currentAmmo = gunData.magazineSize;
-        reserveAmmo = gunData.maxAmmo;
-
-        if (muzzleFlash)
-        {
-            muzzleFlash.Stop();
-            muzzleFlash.Clear();
-        }
+        if (muzzleFlash) { muzzleFlash.Stop(); muzzleFlash.Clear(); }
     }
 
     void Update()
     {
         if (isReloading) return;
-
-        // --- Fire ---
-        if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
-            Shoot();
-
-        // --- Reload ---
-        if (Input.GetKeyDown(KeyCode.R))
-            StartCoroutine(Reload());
+        if (Input.GetMouseButton(0) && Time.time >= nextFireTime) Shoot();
+        if (Input.GetKeyDown(KeyCode.R)) StartCoroutine(Reload());
     }
 
-    // Trong LateUpdate của Gun.cs
+    // Xử lý xoay xương sau khi Animation đã chạy để không bị giật
     void LateUpdate()
     {
-        // Ép hướng của súng luôn nhìn về phía trước Camera
-        if (firePoint != null && aimCamera != null)
-        {
-            // Bạn có thể dùng Raycast để xác định điểm giữa màn hình
-            // Hoặc đơn giản là ép model súng nhìn theo hướng Camera
-        }
+        if (!spineBone || !CameraHolder || !neckBone || !aimCamera) return;
+
+        // 1. Lấy góc lên/xuống từ CameraHolder
+        float xRot = CameraHolder.localEulerAngles.x;
+        if (xRot > 180) xRot -= 360;
+
+        // 2. Xoay lưng (Spine): Giới hạn trọng tâm để chân KHÔNG bị nhấc
+        // Chỉ dùng một phần góc quay (spineWeight)
+        spineBone.localRotation *= Quaternion.Euler(xRot * spineWeight, 0, 0);
+
+        // 3. Xoay cổ (Neck): Ép đầu nhìn thẳng vào Crosshair
+        // Bù đắp phần còn lại mà lưng chưa xoay tới
+        neckBone.rotation = aimCamera.transform.rotation;
+
+        // Bù đắp góc lệch mặc định của Mixamo (Thử 90 hoặc -90 nếu đầu bị quay ngang)
+        neckBone.rotation *= Quaternion.Euler(0, 90, 0);
     }
 
     void Shoot()
     {
-        if (currentAmmo <= 0)
-        {
-            // Hết đạn mới trigger reload
-            StartCoroutine(Reload());
-            return;
-        }
+        if (currentAmmo <= 0) { StartCoroutine(Reload()); return; }
 
         nextFireTime = Time.time + currentFireRate;
         currentAmmo--;
 
-        // Trigger animation Shoot
-        if (animator != null)
+        if (animator)
         {
             animator.ResetTrigger("Reload");
             animator.SetFloat("AnimSpeed", animSpeedMultiplier);
@@ -100,26 +86,21 @@ public class Gun : MonoBehaviour
 
         if (muzzleFlash) muzzleFlash.Play();
 
-        // Raycast từ camera
+        // Bắn từ tâm Camera (Crosshair)
         Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         Vector3 targetPoint = ray.GetPoint(aimRange);
-
-        if (Physics.Raycast(ray, out RaycastHit hit, aimRange))
-            targetPoint = hit.point;
+        if (Physics.Raycast(ray, out RaycastHit hit, aimRange)) targetPoint = hit.point;
 
         Vector3 shootDir = (targetPoint - firePoint.position).normalized;
-        Quaternion bulletRot = Quaternion.LookRotation(shootDir);
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(shootDir));
 
-        // Spawn bullet
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, bulletRot);
-
+        // Bỏ qua va chạm với người chơi
         Collider playerCol = GetComponentInParent<Collider>();
         Collider bulletCol = bullet.GetComponent<Collider>();
-        if (playerCol != null && bulletCol != null)
-            Physics.IgnoreCollision(bulletCol, playerCol);
+        if (playerCol && bulletCol) Physics.IgnoreCollision(bulletCol, playerCol);
 
         Bullet b = bullet.GetComponent<Bullet>();
-        if (b != null)
+        if (b)
         {
             b.damage = currentDamage;
             b.SetDirection(shootDir);
@@ -130,70 +111,48 @@ public class Gun : MonoBehaviour
 
     IEnumerator Reload()
     {
-        if (reserveAmmo <= 0 || currentAmmo == gunData.magazineSize || isReloading)
-            yield break;
-
+        if (reserveAmmo <= 0 || currentAmmo == gunData.magazineSize || isReloading) yield break;
         isReloading = true;
 
-        if (animator != null)
+        if (animator)
         {
             animator.ResetTrigger("Shoot");
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
             animator.SetTrigger("Reload");
         }
 
         yield return new WaitForSeconds(currentReloadTime);
 
-        int need = gunData.magazineSize - currentAmmo;
-        int load = Mathf.Min(need, reserveAmmo);
-
+        int load = Mathf.Min(gunData.magazineSize - currentAmmo, reserveAmmo);
         currentAmmo += load;
         reserveAmmo -= load;
         isReloading = false;
     }
 
-    // --- Buff stats + animation theo wave ---
     public void ApplyWaveUpgrade(int wave)
     {
         if (wave % 5 != 0) return;
-        int waveMultiplier = wave / 5;
+        int mult = wave / 5;
+        currentDamage = gunData.damage + 5f * mult;
+        currentBulletSpeed = gunData.bulletSpeed + 20f * mult;
+        currentFireRate = gunData.fireRate * Mathf.Pow(0.9f, mult);
+        currentReloadTime = gunData.reloadTime * Mathf.Pow(0.9f, mult);
 
-        // Stats
-        currentDamage = gunData.damage + 5f * waveMultiplier;
-        currentBulletSpeed = gunData.bulletSpeed + 20f * waveMultiplier;
-        currentFireRate = gunData.fireRate * Mathf.Pow(0.9f, waveMultiplier);
-        currentReloadTime = gunData.reloadTime * Mathf.Pow(0.9f, waveMultiplier);
-        currentAmmo = gunData.magazineSize;
+        if (waveBulletColors?.Length > 0)
+            bulletColor = waveBulletColors[(mult - 1) % waveBulletColors.Length];
 
-        // Đổi màu đạn
-        if (waveBulletColors != null && waveBulletColors.Length > 0)
-        {
-            int colorIndex = (waveMultiplier - 1) % waveBulletColors.Length;
-            bulletColor = waveBulletColors[colorIndex];
-        }
-
-        // Animation speed
-        animSpeedMultiplier = 1f + 0.1f * waveMultiplier;
-        if (animator != null)
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
-
-        Debug.Log($"Gun upgraded! Wave: {wave} | FireRate: {currentFireRate:F2} | ReloadTime: {currentReloadTime:F2} | AnimSpeed: {animSpeedMultiplier:F2}");
+        animSpeedMultiplier = 1f + 0.1f * mult;
+        if (animator) animator.SetFloat("AnimSpeed", animSpeedMultiplier);
     }
 
-    // --- Reset stats ---
     public void ResetGunStats()
     {
         currentDamage = gunData.damage;
         currentFireRate = gunData.fireRate;
         currentReloadTime = gunData.reloadTime;
         currentBulletSpeed = gunData.bulletSpeed;
-
-        bulletColor = Color.red;
         currentAmmo = gunData.magazineSize;
         reserveAmmo = gunData.maxAmmo;
-
+        bulletColor = Color.red;
         animSpeedMultiplier = 1f;
-        if (animator != null)
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
     }
 }
