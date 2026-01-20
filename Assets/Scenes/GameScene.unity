@@ -413,7 +413,10 @@ MonoBehaviour:
   - {fileID: 355610226}
   - {fileID: 2121886819}
   - {fileID: 382683759}
+  laneTargets: []
   spawnInterval: 2.5
+  currentWave: 1
+  zombiesPerWave: 5
 --- !u!4 &371357923
 Transform:
   m_ObjectHideFlags: 0
