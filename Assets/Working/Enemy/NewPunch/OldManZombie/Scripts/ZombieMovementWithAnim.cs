@@ -15,8 +15,9 @@ public class ZombieMovementWithAnim : MonoBehaviour
 
     private Animator animator;
     private NavMeshAgent agent;
-    private Health health;   // biến health cho enemy
+    private Health health;
     private bool isDead = false;
+    private bool isAttacking = false;
 
     void Start()
     {
@@ -29,10 +30,14 @@ public class ZombieMovementWithAnim : MonoBehaviour
             health.SetUp(startHealth, maxHealth);
         }
 
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+
+        if (target == null)
         {
-            target = playerObj.transform;
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                target = playerObj.transform;
+            }
         }
 
         if (agent != null)
@@ -46,7 +51,7 @@ public class ZombieMovementWithAnim : MonoBehaviour
 
     void Update()
     {
-        if (isDead) return; // nếu đã chết thì không update nữa
+        if (isDead) return;
         if (target == null || agent == null || animator == null) return;
 
         if (agent.isOnNavMesh)
@@ -56,29 +61,27 @@ public class ZombieMovementWithAnim : MonoBehaviour
             float currentSpeed = agent.velocity.magnitude;
             animator.SetFloat("Run", currentSpeed);
 
-            // Kiểm tra máu
             if (health != null && health.GetCurrentHealth() <= 0)
             {
                 Die();
             }
 
             float distance = Vector3.Distance(transform.position, target.position);
-            if (distance <= stoppingDistance)
+            if (distance <= stoppingDistance && !isAttacking)
             {
-                Debug.Log(gameObject.name + " đã chạm vào Player!");
-                Destroy(gameObject);
+                AttackPlayer();
             }
         }
     }
+
     public void TakeDamage(int damage)
     {
         if (health != null && !isDead)
         {
             health.TakeDamage(damage);
 
-            // Chỉ gọi trigger nếu chưa ở trong state Hit
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-            if (!stateInfo.IsName("Hit")) // tên state Hit trong Animator
+            if (!stateInfo.IsName("Hit"))
             {
                 animator.SetTrigger("Hit");
             }
@@ -87,6 +90,31 @@ public class ZombieMovementWithAnim : MonoBehaviour
             {
                 Die();
             }
+        }
+    }
+
+    private void AttackPlayer()
+    {
+        isAttacking = true;
+        agent.isStopped = true;
+        animator.SetTrigger("Attack");
+
+        Health playerHealth = target.GetComponent<Health>();
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage(10);
+        }
+
+        StartCoroutine(ResetAttack());
+    }
+
+    private IEnumerator ResetAttack()
+    {
+        yield return new WaitForSeconds(2f);
+        isAttacking = false;
+        if (!isDead && agent != null)
+        {
+            agent.isStopped = false;
         }
     }
 
@@ -99,12 +127,10 @@ public class ZombieMovementWithAnim : MonoBehaviour
 
         if (agent != null)
         {
-            agent.enabled = false; // tắt hẳn NavMeshAgent
+            agent.enabled = false;
         }
 
         animator.SetTrigger("Die");
-
-        // Xóa zombie sau khi animation Die chạy xong (ví dụ 3 giây)
         Destroy(gameObject, 3f);
     }
 }
