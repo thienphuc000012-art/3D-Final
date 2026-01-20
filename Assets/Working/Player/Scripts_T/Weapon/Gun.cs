@@ -24,6 +24,9 @@ public class Gun : MonoBehaviour
     [Header("Gun Stats")]
     public float aimRange = 200f;
 
+    [Header("Spine Rotation")]
+    public Transform spineBone; // Kéo xương mixamorig:Spine2 vào đây
+
     // --- Internal state ---
     int currentAmmo;
     int reserveAmmo;
@@ -64,14 +67,14 @@ public class Gun : MonoBehaviour
             StartCoroutine(Reload());
     }
 
+    // Trong LateUpdate của Gun.cs
     void LateUpdate()
     {
-        // Xoay gun theo camera để look up/down
-        if (GunHolder != null && CameraHolder != null)
+        // Ép hướng của súng luôn nhìn về phía trước Camera
+        if (firePoint != null && aimCamera != null)
         {
-            Vector3 angles = GunHolder.localEulerAngles;
-            angles.x = CameraHolder.localEulerAngles.x;
-            GunHolder.localEulerAngles = angles;
+            // Bạn có thể dùng Raycast để xác định điểm giữa màn hình
+            // Hoặc đơn giản là ép model súng nhìn theo hướng Camera
         }
     }
 
