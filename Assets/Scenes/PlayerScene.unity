@@ -222,14 +222,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 444464876}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.5, y: -0.5, z: 0.5, w: 0.5}
+  m_LocalRotation: {x: -0.47314686, y: -0.5254828, z: 0.52548265, w: 0.4731468}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 764625669}
   m_Father: {fileID: 1457817649}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 90}
+  m_LocalEulerAnglesHint: {x: 6, y: -90, z: 90}
 --- !u!1 &503664235 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7658220749020036070, guid: d32892c82a841e34bb692140d685dcfc, type: 3}
@@ -257,18 +257,21 @@ MonoBehaviour:
   bulletPrefab: {fileID: 1289966034225705241, guid: 421482c252aa6004eb9f88a840fe3950, type: 3}
   muzzleFlash: {fileID: 1524922295}
   aimCamera: {fileID: 1497898492}
-  aimRange: 200
+  animator: {fileID: 2070719623}
+  GunHolder: {fileID: 764625669}
+  CameraHolder: {fileID: 2020922798}
   bulletColor: {r: 1, g: 0.14901961, b: 0.16862746, a: 1}
   waveBulletColors:
   - {r: 1, g: 0.9843138, b: 0, a: 0}
   - {r: 1, g: 1, b: 1, a: 0}
+  aimRange: 200
 --- !u!1001 &573913733
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 724425087}
+    m_TransformParent: {fileID: 2006270017}
     m_Modifications:
     - target: {fileID: -8969417572210971711, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
       propertyPath: m_Layer
@@ -606,6 +609,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 129d2ed5865ea7a449ba77f34f7661f7, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6162274040497989121, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
       propertyPath: m_Name
       value: Mask
@@ -685,6 +692,12 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2020922798}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 724425087}
     - targetCorrespondingSourceObject: {fileID: 2412161367050800168, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 444464877}
@@ -962,14 +975,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 724425086}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1706371102}
-  - {fileID: 2070719622}
-  m_Father: {fileID: 2006270017}
+  m_Father: {fileID: 2070719622}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &739372894
 GameObject:
@@ -1210,7 +1222,7 @@ MonoBehaviour:
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
-    TrackingTarget: {fileID: 1119228208}
+    TrackingTarget: {fileID: 0}
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
@@ -1257,7 +1269,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1119228207}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.5, z: 0, w: 0.8660254}
+  m_LocalRotation: {x: -0, y: -0.5, z: -0, w: 0.8660254}
   m_LocalPosition: {x: 0, y: 1.6, z: 0.05}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1356,7 +1368,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1497898490}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.5, z: 0, w: 0.8660254}
+  m_LocalRotation: {x: -0, y: -0.5, z: -0, w: 0.8660254}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6586,8 +6598,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2020922798}
-  - {fileID: 724425087}
+  - {fileID: 2070719622}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2020922797
@@ -6615,13 +6626,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2020922797}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 1.6, z: 0.05}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1497898493}
-  m_Father: {fileID: 2006270017}
+  m_Father: {fileID: 2070719622}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2020922799
 MonoBehaviour:
@@ -6635,10 +6646,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71d9ae3345d9db346bbb792705fc2b05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MouseLook
+  playerBody: {fileID: 2070719622}
   sensitivity: 120
 --- !u!4 &2070719622 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
+  m_PrefabInstance: {fileID: 573913733}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &2070719623 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 140c3ea5f18c36241a84992549721ff8, type: 3}
   m_PrefabInstance: {fileID: 573913733}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5217303731445193174
