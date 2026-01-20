@@ -12730,7 +12730,7 @@ GameObject:
   - component: {fileID: 8118839697471807638}
   m_Layer: 0
   m_Name: bodyhitbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -12769,8 +12769,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.36, y: 1.6, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.36, y: 1.6, z: 0.41668057}
+  m_Center: {x: 0, y: 0, z: -0.06339276}
 --- !u!114 &8118839697471807638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13996,7 +13996,7 @@ GameObject:
   - component: {fileID: 5695876079492745482}
   m_Layer: 0
   m_Name: headhitbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -14740,7 +14740,7 @@ GameObject:
   - component: {fileID: -8935247408821391485}
   m_Layer: 0
   m_Name: Enemy run
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

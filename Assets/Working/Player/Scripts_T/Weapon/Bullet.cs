@@ -65,4 +65,12 @@ public class Bullet : MonoBehaviour
 
         Destroy(gameObject);
     }
+
+    private void OnTriggerEnter(Collider hit)
+    {
+        if(hit.CompareTag("Enemy"))
+        {            
+            hit.transform.parent.GetComponent<Health>()?.TakeDamage((int)damage);
+        }
+    }
 }

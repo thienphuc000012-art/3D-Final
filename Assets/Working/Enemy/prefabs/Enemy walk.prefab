@@ -13042,7 +13042,7 @@ GameObject:
   - component: {fileID: 8535263991564656986}
   m_Layer: 0
   m_Name: headhitbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -13081,8 +13081,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.34, y: 0.24, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.34, y: 0.24, z: 0.37565643}
+  m_Center: {x: 0, y: 0, z: -0.049245685}
 --- !u!114 &8535263991564656986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14671,7 +14671,7 @@ GameObject:
   - component: {fileID: -8660294935543302957}
   m_Layer: 0
   m_Name: Enemy walk
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15397,7 +15397,7 @@ GameObject:
   - component: {fileID: 1067326254205046103}
   m_Layer: 0
   m_Name: bodyhitbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15436,8 +15436,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.48, y: 1.22, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.48, y: 1.5303018, z: 0.4351468}
+  m_Center: {x: 0, y: 0.011999816, z: -0.06625879}
 --- !u!114 &1067326254205046103
 MonoBehaviour:
   m_ObjectHideFlags: 0
