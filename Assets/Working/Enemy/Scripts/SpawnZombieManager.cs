@@ -6,18 +6,17 @@ using UnityEngine.InputSystem;
 public class SpawnZombieManager : MonoBehaviour
 {
     [Header("Zombie Prefabs Walk/Run")]
-    public GameObject[] zombieWalkPrefabs;
-    public GameObject[] zombieRunPrefabs;
+    public GameObject[] zombieWalkPrefabs; // nhiều loại Walk
+    public GameObject[] zombieRunPrefabs;  // nhiều loại Run
     public GameObject zombieBossPrefab;
 
     [Header("Spawn Lanes")]
-    public Transform[] lanes;          // vị trí spawn
-    public Transform[] laneTargets;    // target cho từng lane
+    public Transform[] lanes; // 4 lane spawn
 
     [Header("Wave Settings")]
     public float spawnInterval = 2.5f;
-    public int currentWave = 1;        // hiển thị và chỉnh sửa được trong Inspector
-    public int zombiesPerWave = 5;     // hiển thị và chỉnh sửa được trong Inspector
+    private int currentWave = 1;
+    private int zombiesPerWave = 5;
 
     private bool spawning = false;
     private bool waveEnded = false;
@@ -29,7 +28,6 @@ public class SpawnZombieManager : MonoBehaviour
 
     void Update()
     {
-        // Khi wave kết thúc, nhấn Space để bắt đầu wave mới
         if (waveEnded && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             waveEnded = false;
@@ -64,6 +62,7 @@ public class SpawnZombieManager : MonoBehaviour
         // Thêm Walk
         for (int i = 0; i < walkCount; i++)
         {
+            // chọn ngẫu nhiên prefab Walk
             GameObject prefab = zombieWalkPrefabs[Random.Range(0, zombieWalkPrefabs.Length)];
             spawnList.Add(prefab);
         }
@@ -71,6 +70,7 @@ public class SpawnZombieManager : MonoBehaviour
         // Thêm Run
         for (int i = 0; i < runCount; i++)
         {
+            // chọn ngẫu nhiên prefab Run
             GameObject prefab = zombieRunPrefabs[Random.Range(0, zombieRunPrefabs.Length)];
             spawnList.Add(prefab);
         }
@@ -87,15 +87,7 @@ public class SpawnZombieManager : MonoBehaviour
 
             usedLanes.Add(laneIndex);
 
-            GameObject zombie = Instantiate(prefab, lanes[laneIndex].position, Quaternion.identity);
-
-            // Gán target theo lane
-            ZombieMovementWithAnim zm = zombie.GetComponent<ZombieMovementWithAnim>();
-            if (zm != null && laneTargets.Length > laneIndex)
-            {
-                zm.target = laneTargets[laneIndex];
-            }
-
+            Instantiate(prefab, lanes[laneIndex].position, Quaternion.identity);
             Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex);
 
             yield return new WaitForSeconds(spawnInterval);
