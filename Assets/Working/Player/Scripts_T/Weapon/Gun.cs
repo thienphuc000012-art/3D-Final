@@ -13,15 +13,15 @@ public class Gun : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
-    [Header("Aim / Look")]
-    public Transform GunHolder;
+    [Header("Aim / Look Control")]
+    public Transform GunHolder;   // Object cha trực tiếp của mô hình súng
     public Transform CameraHolder;
 
     [Header("Spine & Neck Rotation")]
-    public Transform spineBone; // Kéo xương Spine2 vào
-    public Transform neckBone;  // Kéo xương Neck vào
+    public Transform spineBone;    // Xương mixamorig:Spine2
+    public Transform neckBone;     // Xương mixamorig:Neck
     [Range(0f, 1f)]
-    public float spineWeight = 0.3f; // Tỉ lệ lưng gập (0.2 - 0.4 để chân bám đất)
+    public float spineWeight = 0.4f;
 
     [Header("Visual & Stats")]
     public Color bulletColor = Color.red;
@@ -40,40 +40,83 @@ public class Gun : MonoBehaviour
     {
         ResetGunStats();
         if (muzzleFlash) { muzzleFlash.Stop(); muzzleFlash.Clear(); }
+
+        // Đảm bảo súng bắt đầu với đầy đạn
+        currentAmmo = gunData.magazineSize;
+        reserveAmmo = gunData.maxAmmo;
     }
 
     void Update()
     {
         if (isReloading) return;
-        if (Input.GetMouseButton(0) && Time.time >= nextFireTime) Shoot();
-        if (Input.GetKeyDown(KeyCode.R)) StartCoroutine(Reload());
+
+        // 1. LUÔN HƯỚNG SÚNG VỀ CROSSHAIR (Lia súng)
+        HandleAiming();
+
+        // 2. LOGIC BẮN
+        if (Input.GetButton("Fire1") && Time.time >= nextFireTime)
+        {
+            if (currentAmmo > 0) Shoot();
+            else StartCoroutine(Reload());
+        }
+
+        if (Input.GetKeyDown(KeyCode.R) && currentAmmo < gunData.magazineSize)
+        {
+            StartCoroutine(Reload());
+        }
     }
 
-    // Xử lý xoay xương sau khi Animation đã chạy để không bị giật
     void LateUpdate()
     {
-        if (!spineBone || !CameraHolder || !neckBone || !aimCamera) return;
+        if (spineBone == null || CameraHolder == null) return;
 
-        // 1. Lấy góc lên/xuống từ CameraHolder
         float xRot = CameraHolder.localEulerAngles.x;
-        if (xRot > 180) xRot -= 360;
+        if (xRot > 180) xRot -= 360f;
 
-        // 2. Xoay lưng (Spine): Giới hạn trọng tâm để chân KHÔNG bị nhấc
-        // Chỉ dùng một phần góc quay (spineWeight)
-        spineBone.localRotation *= Quaternion.Euler(xRot * spineWeight, 0, 0);
+        float targetAngle = xRot * spineWeight;
 
-        // 3. Xoay cổ (Neck): Ép đầu nhìn thẳng vào Crosshair
-        // Bù đắp phần còn lại mà lưng chưa xoay tới
-        neckBone.rotation = aimCamera.transform.rotation;
+        spineBone.localRotation = Quaternion.Euler(0, 0, targetAngle);
 
-        // Bù đắp góc lệch mặc định của Mixamo (Thử 90 hoặc -90 nếu đầu bị quay ngang)
-        neckBone.rotation *= Quaternion.Euler(0, 90, 0);
+        SyncGunToCrosshair();
+    }
+
+    void SyncGunToCrosshair()
+    {
+        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Vector3 targetPoint;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, aimRange))
+            targetPoint = hit.point;
+        else
+            targetPoint = ray.GetPoint(aimRange);
+
+        if (GunHolder != null)
+        {
+            // Súng sẽ nhìn về mục tiêu ngay trong LateUpdate để khớp với xương người
+            GunHolder.LookAt(targetPoint);
+        }
+    }
+
+    void HandleAiming()
+    {
+        // Xác định điểm mục tiêu từ giữa màn hình
+        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Vector3 targetPoint;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, aimRange))
+            targetPoint = hit.point;
+        else
+            targetPoint = ray.GetPoint(aimRange);
+
+        // Ép GunHolder lia theo điểm này (Điều này giúp tay bám theo nếu bạn dùng IK)
+        if (GunHolder != null)
+        {
+            GunHolder.LookAt(targetPoint);
+        }
     }
 
     void Shoot()
     {
-        if (currentAmmo <= 0) { StartCoroutine(Reload()); return; }
-
         nextFireTime = Time.time + currentFireRate;
         currentAmmo--;
 
@@ -86,15 +129,11 @@ public class Gun : MonoBehaviour
 
         if (muzzleFlash) muzzleFlash.Play();
 
-        // Bắn từ tâm Camera (Crosshair)
-        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        Vector3 targetPoint = ray.GetPoint(aimRange);
-        if (Physics.Raycast(ray, out RaycastHit hit, aimRange)) targetPoint = hit.point;
-
-        Vector3 shootDir = (targetPoint - firePoint.position).normalized;
+        // Vì GunHolder đã LookAt ở Update, firePoint.forward luôn chuẩn xác
+        Vector3 shootDir = firePoint.forward;
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(shootDir));
 
-        // Bỏ qua va chạm với người chơi
+        // Bỏ qua va chạm với Player
         Collider playerCol = GetComponentInParent<Collider>();
         Collider bulletCol = bullet.GetComponent<Collider>();
         if (playerCol && bulletCol) Physics.IgnoreCollision(bulletCol, playerCol);
@@ -152,7 +191,5 @@ public class Gun : MonoBehaviour
         currentBulletSpeed = gunData.bulletSpeed;
         currentAmmo = gunData.magazineSize;
         reserveAmmo = gunData.maxAmmo;
-        bulletColor = Color.red;
-        animSpeedMultiplier = 1f;
     }
 }
