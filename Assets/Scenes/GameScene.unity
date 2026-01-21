@@ -263,7 +263,7 @@ MonoBehaviour:
   - {fileID: 6634257854025271467, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
   zombieRunPrefabs:
   - {fileID: 6362014200617677948, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
-  zombieBossPrefab: {fileID: 7164574499545700251, guid: 2581c8394f1aa5242806c0077a4f717b, type: 3}
+  zombieBossPrefabs: []
   lanes:
   - {fileID: 1349005813}
   - {fileID: 1844922527}
@@ -3579,12 +3579,14 @@ MonoBehaviour:
   animator: {fileID: 1444750070}
   GunHolder: {fileID: 1427849385}
   CameraHolder: {fileID: 1133315578}
+  spineBone: {fileID: 0}
+  neckBone: {fileID: 0}
+  spineWeight: 0.3
   bulletColor: {r: 1, g: 0.14901961, b: 0.16862746, a: 1}
   waveBulletColors:
   - {r: 1, g: 0.9843138, b: 0, a: 0}
   - {r: 1, g: 1, b: 1, a: 0}
   aimRange: 200
-  spineBone: {fileID: 0}
 --- !u!4 &1857110704 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7658220749019867078, guid: d32892c82a841e34bb692140d685dcfc, type: 3}
