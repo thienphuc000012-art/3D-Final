@@ -1027,7 +1027,7 @@ Transform:
   m_GameObject: {fileID: 1299446740}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.35123, y: -0.05813, z: -13.54578}
+  m_LocalPosition: {x: 5.46, y: -0.05813, z: -13.54578}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1196,9 +1196,17 @@ MonoBehaviour:
   - {fileID: 1311052050}
   - {fileID: 9081853}
   - {fileID: 2056884941}
-  spawnInterval: 2.5
+  spawnInterval: 0
   currentWave: 1
   zombiesPerWave: 5
+  walkCount: 0
+  runCount: 0
+  bossCount: 5
+  horizontalOffsetRange: 3
+  overrideCounts: 0
+  testWalkCount: 0
+  testRunCount: 0
+  testBossCount: 5
 --- !u!4 &1324267485
 Transform:
   m_ObjectHideFlags: 0
@@ -1319,8 +1327,8 @@ Transform:
   m_GameObject: {fileID: 1618498716}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11.70621, y: 0.00575, z: -14.82}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 11.70621, y: 0.03, z: -14.82}
+  m_LocalScale: {x: 0.51, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1836277439}
@@ -1641,8 +1649,8 @@ Transform:
   m_GameObject: {fileID: 2006319783}
   serializedVersion: 2
   m_LocalRotation: {x: -0.0019569006, y: 0.00091144897, z: -0.00076473906, w: 0.9999974}
-  m_LocalPosition: {x: 2.3196, y: -0.0344, z: -7.887}
-  m_LocalScale: {x: 1.493172, y: 1, z: 2.57652}
+  m_LocalPosition: {x: 4.8073, y: -0.0456, z: -9.7705}
+  m_LocalScale: {x: 1.9914435, y: 1, z: 2.9524343}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
