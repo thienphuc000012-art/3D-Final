@@ -8,19 +8,23 @@ public class SpawnZombieManager : MonoBehaviour
     [Header("Zombie Prefabs Walk/Run")]
     public GameObject[] zombieWalkPrefabs;
     public GameObject[] zombieRunPrefabs;
-    public GameObject zombieBossPrefab;
+
+    [Header("Zombie Prefabs Boss")]
+    public GameObject[] zombieBossPrefabs;   
 
     [Header("Spawn Lanes")]
-    public Transform[] lanes;          // vị trí spawn
-    public Transform[] laneTargets;    // target cho từng lane
+    public Transform[] lanes;          
+    public Transform[] laneTargets;    
 
     [Header("Wave Settings")]
     public float spawnInterval = 2.5f;
-    public int currentWave = 1;        // hiển thị và chỉnh sửa được trong Inspector
-    public int zombiesPerWave = 5;     // hiển thị và chỉnh sửa được trong Inspector
-
+    public int currentWave = 1;        
+    public int zombiesPerWave = 5;    
     private bool spawning = false;
     private bool waveEnded = false;
+
+  
+    private int healthBonus = 0;
 
     void Start()
     {
@@ -29,12 +33,20 @@ public class SpawnZombieManager : MonoBehaviour
 
     void Update()
     {
-        // Khi wave kết thúc, nhấn Space để bắt đầu wave mới
+
         if (waveEnded && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             waveEnded = false;
             currentWave++;
             zombiesPerWave += 5;
+
+
+            if (currentWave % 5 == 0)
+            {
+                healthBonus += 100;
+                Debug.Log("Tăng máu cho tất cả enemy thêm 100. Tổng bonus: " + healthBonus);
+            }
+
             StartCoroutine(StartWave());
         }
     }
@@ -53,22 +65,25 @@ public class SpawnZombieManager : MonoBehaviour
 
         List<GameObject> spawnList = new List<GameObject>();
 
-        if (spawnBoss)
+
+        if (spawnBoss && zombieBossPrefabs.Length > 0)
         {
-            spawnList.Add(zombieBossPrefab);
+            GameObject bossPrefab = zombieBossPrefabs[Random.Range(0, zombieBossPrefabs.Length)];
+            spawnList.Add(bossPrefab);
+
             zombiesToSpawn--;
             walkCount = Mathf.RoundToInt(zombiesToSpawn * 0.6f);
             runCount = zombiesToSpawn - walkCount;
         }
 
-        // Thêm Walk
+
         for (int i = 0; i < walkCount; i++)
         {
             GameObject prefab = zombieWalkPrefabs[Random.Range(0, zombieWalkPrefabs.Length)];
             spawnList.Add(prefab);
         }
 
-        // Thêm Run
+    
         for (int i = 0; i < runCount; i++)
         {
             GameObject prefab = zombieRunPrefabs[Random.Range(0, zombieRunPrefabs.Length)];
@@ -89,11 +104,15 @@ public class SpawnZombieManager : MonoBehaviour
 
             GameObject zombie = Instantiate(prefab, lanes[laneIndex].position, Quaternion.identity);
 
-            // Gán target theo lane
+        
             ZombieMovementWithAnim zm = zombie.GetComponent<ZombieMovementWithAnim>();
             if (zm != null && laneTargets.Length > laneIndex)
             {
                 zm.target = laneTargets[laneIndex];
+
+        
+                zm.maxHealth += healthBonus;
+                zm.startHealth += healthBonus;
             }
 
             Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex);

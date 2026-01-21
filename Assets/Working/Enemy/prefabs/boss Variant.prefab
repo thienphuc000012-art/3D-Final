@@ -52,6 +52,10 @@ PrefabInstance:
       propertyPath: m_Avatar
       value: 
       objectReference: {fileID: 9000000, guid: 90fee98e2a7b69741b5c3af1f80e7d0a, type: 3}
+    - target: {fileID: 5884509379456321799, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 694ec2403cb081d4aa0050d681d11b24, type: 2}
     - target: {fileID: 6362014200617677948, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: m_Name
       value: boss Variant
@@ -74,7 +78,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: moveSpeed
-      value: 1.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: startHealth
