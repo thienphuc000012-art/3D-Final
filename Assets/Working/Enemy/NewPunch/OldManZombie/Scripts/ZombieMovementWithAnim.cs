@@ -16,6 +16,7 @@ public class ZombieMovementWithAnim : MonoBehaviour
     private Animator animator;
     private NavMeshAgent agent;
     private Health health;
+
     private bool isDead = false;
     private bool isAttacking = false;
 
