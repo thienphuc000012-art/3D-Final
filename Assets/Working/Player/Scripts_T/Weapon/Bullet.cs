@@ -45,7 +45,7 @@ public class Bullet : MonoBehaviour
     public void SetBulletSpeed(float newSpeed)
     {
         speed = newSpeed;
-        rb.linearVelocity = moveDir * speed;
+        rb.linearVelocity= moveDir * speed;
     }
 
     public void SetColor(Color color)

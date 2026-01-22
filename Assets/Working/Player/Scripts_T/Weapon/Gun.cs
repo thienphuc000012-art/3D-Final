@@ -13,51 +13,58 @@ public class Gun : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
-    [Header("Aim / Look Control")]
-    public Transform GunHolder;   // Object cha trực tiếp của mô hình súng
-    public Transform CameraHolder;
-
-    [Header("Spine & Neck Rotation")]
-    public Transform spineBone;    // Xương mixamorig:Spine2
-    public Transform neckBone;     // Xương mixamorig:Neck
+    [Header("Spine Aim (IMPORTANT)")]
+    public Transform spineBone;        // mixamorig:Spine2
+    public Transform cameraHolder;     // object xoay pitch
     [Range(0f, 1f)]
     public float spineWeight = 0.4f;
+    public float maxSpinePitch = 40f;
 
-    [Header("Visual & Stats")]
+    [Header("Visual")]
     public Color bulletColor = Color.red;
     public Color[] waveBulletColors;
     public float aimRange = 200f;
 
-    // State nội bộ
+    [Header("Magazine (future reload)")]
+    public Transform magazineSocket;
+    public Transform leftHand;
+
+    // ===== Internal State =====
     int currentAmmo;
     int reserveAmmo;
     float nextFireTime;
     bool isReloading;
-    float currentDamage, currentFireRate, currentReloadTime, currentBulletSpeed;
+
+    float currentDamage;
+    float currentFireRate;
+    float currentReloadTime;
+    float currentBulletSpeed;
+
     float animSpeedMultiplier = 1f;
+
+    // ==========================
 
     void Start()
     {
         ResetGunStats();
-        if (muzzleFlash) { muzzleFlash.Stop(); muzzleFlash.Clear(); }
 
-        // Đảm bảo súng bắt đầu với đầy đạn
-        currentAmmo = gunData.magazineSize;
-        reserveAmmo = gunData.maxAmmo;
+        if (muzzleFlash)
+        {
+            muzzleFlash.Stop();
+            muzzleFlash.Clear();
+        }
     }
 
     void Update()
     {
         if (isReloading) return;
 
-        // 1. LUÔN HƯỚNG SÚNG VỀ CROSSHAIR (Lia súng)
-        HandleAiming();
-
-        // 2. LOGIC BẮN
         if (Input.GetButton("Fire1") && Time.time >= nextFireTime)
         {
-            if (currentAmmo > 0) Shoot();
-            else StartCoroutine(Reload());
+            if (currentAmmo > 0)
+                Shoot();
+            else
+                StartCoroutine(Reload());
         }
 
         if (Input.GetKeyDown(KeyCode.R) && currentAmmo < gunData.magazineSize)
@@ -66,55 +73,26 @@ public class Gun : MonoBehaviour
         }
     }
 
+    // ==========================
+    // AIM SPINE (FIX LỆCH)
+    // ==========================
     void LateUpdate()
     {
-        if (spineBone == null || CameraHolder == null) return;
+        if (!spineBone || !cameraHolder) return;
 
-        float xRot = CameraHolder.localEulerAngles.x;
-        if (xRot > 180) xRot -= 360f;
+        float pitch = cameraHolder.localEulerAngles.x;
+        if (pitch > 180f) pitch -= 360f;
 
-        float targetAngle = xRot * spineWeight;
+        pitch = Mathf.Clamp(pitch, -maxSpinePitch, maxSpinePitch);
 
-        spineBone.localRotation = Quaternion.Euler(0, 0, targetAngle);
-
-        SyncGunToCrosshair();
+        // chỉ bẻ X (pitch), không đụng yaw
+        spineBone.localRotation =
+            Quaternion.Euler(pitch * spineWeight, 0f, 0f);
     }
 
-    void SyncGunToCrosshair()
-    {
-        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        Vector3 targetPoint;
-
-        if (Physics.Raycast(ray, out RaycastHit hit, aimRange))
-            targetPoint = hit.point;
-        else
-            targetPoint = ray.GetPoint(aimRange);
-
-        if (GunHolder != null)
-        {
-            // Súng sẽ nhìn về mục tiêu ngay trong LateUpdate để khớp với xương người
-            GunHolder.LookAt(targetPoint);
-        }
-    }
-
-    void HandleAiming()
-    {
-        // Xác định điểm mục tiêu từ giữa màn hình
-        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        Vector3 targetPoint;
-
-        if (Physics.Raycast(ray, out RaycastHit hit, aimRange))
-            targetPoint = hit.point;
-        else
-            targetPoint = ray.GetPoint(aimRange);
-
-        // Ép GunHolder lia theo điểm này (Điều này giúp tay bám theo nếu bạn dùng IK)
-        if (GunHolder != null)
-        {
-            GunHolder.LookAt(targetPoint);
-        }
-    }
-
+    // ==========================
+    // SHOOT
+    // ==========================
     void Shoot()
     {
         nextFireTime = Time.time + currentFireRate;
@@ -127,16 +105,18 @@ public class Gun : MonoBehaviour
             animator.SetTrigger("Shoot");
         }
 
-        if (muzzleFlash) muzzleFlash.Play();
+        if (muzzleFlash)
+            muzzleFlash.Play();
 
-        // Vì GunHolder đã LookAt ở Update, firePoint.forward luôn chuẩn xác
-        Vector3 shootDir = firePoint.forward;
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(shootDir));
+        // === ĐẠN BAY THEO CAMERA ===
+        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+        Vector3 shootDir = ray.direction;
 
-        // Bỏ qua va chạm với Player
-        Collider playerCol = GetComponentInParent<Collider>();
-        Collider bulletCol = bullet.GetComponent<Collider>();
-        if (playerCol && bulletCol) Physics.IgnoreCollision(bulletCol, playerCol);
+        GameObject bullet = Instantiate(
+            bulletPrefab,
+            firePoint.position,
+            Quaternion.LookRotation(shootDir)
+        );
 
         Bullet b = bullet.GetComponent<Bullet>();
         if (b)
@@ -148,9 +128,15 @@ public class Gun : MonoBehaviour
         }
     }
 
+    // ==========================
+    // RELOAD
+    // ==========================
     IEnumerator Reload()
     {
-        if (reserveAmmo <= 0 || currentAmmo == gunData.magazineSize || isReloading) yield break;
+        if (isReloading) yield break;
+        if (reserveAmmo <= 0) yield break;
+        if (currentAmmo >= gunData.magazineSize) yield break;
+
         isReloading = true;
 
         if (animator)
@@ -161,35 +147,57 @@ public class Gun : MonoBehaviour
 
         yield return new WaitForSeconds(currentReloadTime);
 
-        int load = Mathf.Min(gunData.magazineSize - currentAmmo, reserveAmmo);
+        int load = Mathf.Min(
+            gunData.magazineSize - currentAmmo,
+            reserveAmmo
+        );
+
         currentAmmo += load;
         reserveAmmo -= load;
+
         isReloading = false;
     }
 
+    // ==========================
+    // WAVE UPGRADE
+    // ==========================
     public void ApplyWaveUpgrade(int wave)
     {
         if (wave % 5 != 0) return;
+
         int mult = wave / 5;
+
         currentDamage = gunData.damage + 5f * mult;
         currentBulletSpeed = gunData.bulletSpeed + 20f * mult;
         currentFireRate = gunData.fireRate * Mathf.Pow(0.9f, mult);
         currentReloadTime = gunData.reloadTime * Mathf.Pow(0.9f, mult);
 
-        if (waveBulletColors?.Length > 0)
+        if (waveBulletColors != null && waveBulletColors.Length > 0)
             bulletColor = waveBulletColors[(mult - 1) % waveBulletColors.Length];
 
         animSpeedMultiplier = 1f + 0.1f * mult;
-        if (animator) animator.SetFloat("AnimSpeed", animSpeedMultiplier);
+
+        if (animator)
+            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
     }
 
+    // ==========================
+    // RESET
+    // ==========================
     public void ResetGunStats()
     {
         currentDamage = gunData.damage;
         currentFireRate = gunData.fireRate;
         currentReloadTime = gunData.reloadTime;
         currentBulletSpeed = gunData.bulletSpeed;
+
         currentAmmo = gunData.magazineSize;
         reserveAmmo = gunData.maxAmmo;
     }
+
+    // ==========================
+    // ANIMATION EVENTS (DÙNG SAU)
+    // ==========================
+    public void GrabMagazine() { }
+    public void InsertMagazine() { }
 }
