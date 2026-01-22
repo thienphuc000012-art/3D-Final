@@ -18,8 +18,9 @@ public class PlayerShoottest : MonoBehaviour
                 ZombieHitbox hitbox = hit.collider.GetComponent<ZombieHitbox>();
                 if (hitbox != null)
                 {
-                    hitbox.ApplyDamage(damage);
-                    Debug.Log("Bắn trúng " + hitbox.hitboxType);
+                    // ✅ truyền thêm hit.point để spawn máu đúng chỗ
+                    hitbox.ApplyDamage(damage, hit.point);
+                    //Debug.Log("Bắn trúng " + hitbox.hitboxType + " tại " + hit.point);
                 }
             }
         }
