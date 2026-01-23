@@ -4,6 +4,8 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 {
     public float maxHP = 50f;
     float currentHP;
+    public float expDrop = 25f; // mỗi enemy cho bao nhiêu exp
+
 
     void Start()
     {
@@ -19,10 +21,19 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 
     void Die()
     {
-        WaveManager.Instance.OnEnemyKilled();
+        // cộng EXP cho gun
+        Gun gun = FindObjectOfType<Gun>();
+        if (gun)
+            gun.AddExp(expDrop);
+
+        // giữ lại nếu bạn vẫn muốn test wave
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.OnEnemyKilled();
+
         Invoke(nameof(Respawn), 1.5f);
         gameObject.SetActive(false);
     }
+
 
     void Respawn()
     {

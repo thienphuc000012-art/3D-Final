@@ -2,18 +2,23 @@
 
 public class MouseLook : MonoBehaviour
 {
+    public Transform yaw;
     public Transform pitch;
-    public float sensitivity = 150f;
-    public float minPitch = -60f;
-    public float maxPitch = 60f;
 
-    float yaw;
-    float pitchRot;
+    public float sensitivity = 120f;
+    public float minPitch = -85f;
+    public float maxPitch = 85f;
+
+    float yawValue;
+    float pitchValue;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        yawValue = yaw.localEulerAngles.y;
+        pitchValue = 0f;
     }
 
     void Update()
@@ -21,11 +26,11 @@ public class MouseLook : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
 
-        yaw += mouseX;
-        pitchRot -= mouseY;
-        pitchRot = Mathf.Clamp(pitchRot, minPitch, maxPitch);
+        yawValue += mouseX;
+        pitchValue -= mouseY;
+        pitchValue = Mathf.Clamp(pitchValue, minPitch, maxPitch);
 
-        transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
-        pitch.localRotation = Quaternion.Euler(pitchRot, 0f, 0f);
+        yaw.localRotation = Quaternion.Euler(0f, yawValue, 0f);
+        pitch.localRotation = Quaternion.Euler(pitchValue, 0f, 0f);
     }
 }
