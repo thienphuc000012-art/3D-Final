@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.AI;
 
 public class ZombieMovementWithAnim : MonoBehaviour
@@ -9,42 +10,49 @@ public class ZombieMovementWithAnim : MonoBehaviour
     public float moveSpeed = 2f;
 
     [Header("Health Settings")]
-    public int maxHealth = 50;       
-    public int startHealth = 50;     
+    public int maxHealth = 50;
+    public int startHealth = 50;
 
     private Animator animator;
     private NavMeshAgent agent;
-    private Health health;   // biến health cho enemy
+    private Health health;
+
+    private bool isDead = false;
+    private bool isAttacking = false;
 
     void Start()
     {
         animator = GetComponent<Animator>();
         agent = GetComponent<NavMeshAgent>();
-        health = GetComponent<Health>();   // lấy component Health
+        health = GetComponent<Health>();
 
-        // Setup máu cho enemy theo giá trị Inspector
         if (health != null)
         {
             health.SetUp(startHealth, maxHealth);
         }
 
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+
+        if (target == null)
         {
-            target = playerObj.transform;
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                target = playerObj.transform;
+            }
         }
 
         if (agent != null)
         {
             agent.stoppingDistance = stoppingDistance;
-            agent.updatePosition = true;   // để agent tự cập nhật vị trí
-            agent.updateRotation = true;   // để agent tự quay mặt
+            agent.updatePosition = true;
+            agent.updateRotation = true;
             agent.speed = moveSpeed;
         }
     }
 
     void Update()
     {
+        if (isDead) return;
         if (target == null || agent == null || animator == null) return;
 
         if (agent.isOnNavMesh)
@@ -54,32 +62,76 @@ public class ZombieMovementWithAnim : MonoBehaviour
             float currentSpeed = agent.velocity.magnitude;
             animator.SetFloat("Run", currentSpeed);
 
-            // Kiểm tra máu
             if (health != null && health.GetCurrentHealth() <= 0)
             {
                 Die();
             }
-            float distance = Vector3.Distance(transform.position, target.position);
-            if (distance <= stoppingDistance)
-            {
-                Debug.Log(gameObject.name + " đã chạm vào Player!");
-                Destroy(gameObject); // Xóa zombie khi chạm Player
-            }
 
+            float distance = Vector3.Distance(transform.position, target.position);
+            if (distance <= stoppingDistance && !isAttacking)
+            {
+                AttackPlayer();
+            }
         }
     }
 
     public void TakeDamage(int damage)
     {
-        if (health != null)
+        if (health != null && !isDead)
         {
             health.TakeDamage(damage);
+
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            if (!stateInfo.IsName("Hit"))
+            {
+                animator.SetTrigger("Hit");
+            }
+
+            if (health.GetCurrentHealth() <= 0)
+            {
+                Die();
+            }
+        }
+    }
+
+    private void AttackPlayer()
+    {
+        isAttacking = true;
+        agent.isStopped = true;
+        animator.SetTrigger("Attack");
+
+        Health playerHealth = target.GetComponent<Health>();
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage(10);
+        }
+
+        StartCoroutine(ResetAttack());
+    }
+
+    private IEnumerator ResetAttack()
+    {
+        yield return new WaitForSeconds(2f);
+        isAttacking = false;
+        if (!isDead && agent != null)
+        {
+            agent.isStopped = false;
         }
     }
 
     private void Die()
     {
+        if (isDead) return;
+        isDead = true;
+
         Debug.Log(gameObject.name + " đã chết!");
-        Destroy(gameObject);
+
+        if (agent != null)
+        {
+            agent.enabled = false;
+        }
+
+        animator.SetTrigger("Die");
+        Destroy(gameObject, 3f);
     }
 }

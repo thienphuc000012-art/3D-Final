@@ -1,23 +1,23 @@
 ﻿using UnityEngine;
 
-public class EnemyHealth : MonoBehaviour, IDamageable
+public class EnemyHealth : MonoBehaviour//, IDamageable
 {
     public float maxHP = 50f;
     float currentHP;
     public float expDrop = 25f; // mỗi enemy cho bao nhiêu exp
 
 
-    void Start()
-    {
-        currentHP = maxHP;
-    }
+    //void Start()
+    //{
+    //    currentHP = maxHP;
+    //}
 
-    public void TakeDamage(float damage)
-    {
-        currentHP -= damage;
-        if (currentHP <= 0)
-            Die();
-    }
+    //public void TakeDamage(float damage)
+    //{
+    //    currentHP -= damage;
+    //    if (currentHP <= 0)
+    //        Die();
+    //}
 
     void Die()
     {

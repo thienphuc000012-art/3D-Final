@@ -59,9 +59,21 @@ public class Bullet : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        IDamageable dmg = collision.collider.GetComponent<IDamageable>();
-        if (dmg != null)
-            dmg.TakeDamage(damage);
+        // Nếu collider có ZombieHitbox thì gọi ApplyDamage
+        ZombieHitbox hitbox = collision.collider.GetComponent<ZombieHitbox>();
+        if (hitbox != null)
+        {
+            hitbox.ApplyDamage((int)damage);
+        }
+        else
+        {
+            // fallback: nếu có Health trực tiếp thì trừ máu
+            Health health = collision.collider.GetComponent<Health>();
+            if (health != null)
+            {
+                health.TakeDamage((int)damage);
+            }
+        }
 
         Destroy(gameObject);
     }

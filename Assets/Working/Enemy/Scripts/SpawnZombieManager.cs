@@ -1,27 +1,72 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SpawnZombieManager : MonoBehaviour
 {
-    [Header("Zombie Prefabs")]
-    public GameObject zombieWalkPrefab;
-    public GameObject zombieRunPrefab;
-    public GameObject zombieBossPrefab;
+    [Header("Zombie Prefabs Walk/Run")]
+    public GameObject[] zombieWalkPrefabs;
+    public GameObject[] zombieRunPrefabs;
+
+    [Header("Zombie Prefabs Boss")]
+    public GameObject[] zombieBossPrefabs;
 
     [Header("Spawn Lanes")]
-    public Transform[] lanes; // 4 lane spawn
+    public Transform[] lanes;          
+    public Transform[] laneTargets;   
 
     [Header("Wave Settings")]
     public float spawnInterval = 2.5f;
-    private int currentWave = 1;
-    private int zombiesPerWave = 5;
+    public int currentWave = 1;
+    public int zombiesPerWave = 5;
+
+    [Header("Zombie Counts ")]
+    [Tooltip("Số lượng zombie Walk trong wave hiện tại")]
+    public int walkCount;
+    [Tooltip("Số lượng zombie Run trong wave hiện tại")]
+    public int runCount;
+    [Tooltip("Số lượng zombie Boss trong wave hiện tại")]
+    public int bossCount;
+
+    [Header("Spawn Settings")]
+    [Tooltip("Khoảng lệch ngang tối đa khi spawn để tránh chồng lên nhau")]
+    public float horizontalOffsetRange = 1.5f;
+
+    [Header("Test Settings")]
+    public bool overrideCounts = false;   // nếu bật thì dùng số lượng nhập tay
+    public int testWalkCount = 0;
+    public int testRunCount = 0;
+    public int testBossCount = 0;
+
 
     private bool spawning = false;
+    private bool waveEnded = false;
+    private int healthBonus = 0;
 
     void Start()
     {
+        UpdateZombieCountByWave();
         StartCoroutine(StartWave());
+    }
+
+    void Update()
+    {
+        if (waveEnded && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            waveEnded = false;
+            currentWave++;
+            UpdateZombieCountByWave();
+
+
+            if (currentWave % 5 == 0)
+            {
+                healthBonus += 100;
+                Debug.Log("Tăng máu cho tất cả enemy thêm 100. Tổng bonus: " + healthBonus);
+            }
+
+            StartCoroutine(StartWave());
+        }
     }
 
     IEnumerator StartWave()
@@ -31,37 +76,50 @@ public class SpawnZombieManager : MonoBehaviour
 
         Debug.Log("=== Bắt đầu Wave " + currentWave + " với " + zombiesToSpawn + " zombie ===");
 
-        // Nếu wave là bội số của 5 thì thêm boss
         bool spawnBoss = (currentWave % 5 == 0);
 
-        // Tính số lượng Walk/Run
-        int walkCount = Mathf.RoundToInt(zombiesToSpawn * 0.6f); // 60% đi bộ
-        int runCount = zombiesToSpawn - walkCount;               // còn lại chạy
-
-        // Tạo danh sách spawn
-        List<GameObject> spawnList = new List<GameObject>();
-
-        // Nếu wave có boss thì thêm boss đầu tiên
-        if (spawnBoss)
+        if (overrideCounts)
         {
-            spawnList.Add(zombieBossPrefab);
-            zombiesToSpawn--; // boss chiếm 1 slot
+            walkCount = testWalkCount;
+            runCount = testRunCount;
+            bossCount = testBossCount;
+        }
+        else
+        {
             walkCount = Mathf.RoundToInt(zombiesToSpawn * 0.6f);
             runCount = zombiesToSpawn - walkCount;
+            bossCount = spawnBoss ? 1 : 0;
         }
 
-        // Thêm Walk trước
+        List<GameObject> spawnList = new List<GameObject>();
+
+  
+        for (int i = 0; i < bossCount; i++)
+        {
+            if (zombieBossPrefabs.Length > 0)
+            {
+                GameObject bossPrefab = zombieBossPrefabs[Random.Range(0, zombieBossPrefabs.Length)];
+                spawnList.Add(bossPrefab);
+            }
+        }
+
+  
         for (int i = 0; i < walkCount; i++)
-            spawnList.Add(zombieWalkPrefab);
+        {
+            GameObject prefab = zombieWalkPrefabs[Random.Range(0, zombieWalkPrefabs.Length)];
+            spawnList.Add(prefab);
+        }
 
-        // Thêm Run sau
+      
         for (int i = 0; i < runCount; i++)
-            spawnList.Add(zombieRunPrefab);
+        {
+            GameObject prefab = zombieRunPrefabs[Random.Range(0, zombieRunPrefabs.Length)];
+            spawnList.Add(prefab);
+        }
 
-        // Danh sách lane đã dùng
+
         List<int> usedLanes = new List<int>();
 
-        // Spawn lần lượt theo danh sách
         foreach (GameObject prefab in spawnList)
         {
             int laneIndex;
@@ -72,8 +130,23 @@ public class SpawnZombieManager : MonoBehaviour
 
             usedLanes.Add(laneIndex);
 
-            Instantiate(prefab, lanes[laneIndex].position, Quaternion.identity);
-            Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex);
+  
+            Vector3 basePos = lanes[laneIndex].position;
+            float offset = Random.Range(-horizontalOffsetRange, horizontalOffsetRange);
+            Vector3 spawnPos = basePos + new Vector3(0f, 0f, offset);
+
+            GameObject zombie = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+ 
+            ZombieMovementWithAnim zm = zombie.GetComponent<ZombieMovementWithAnim>();
+            if (zm != null && laneTargets.Length > laneIndex)
+            {
+                zm.target = laneTargets[laneIndex];
+                zm.maxHealth += healthBonus;
+                zm.startHealth += healthBonus;
+            }
+
+            Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex + " offset Z: " + offset);
 
             yield return new WaitForSeconds(spawnInterval);
 
@@ -82,13 +155,13 @@ public class SpawnZombieManager : MonoBehaviour
         }
 
         spawning = false;
+        waveEnded = true;
 
         Debug.Log("=== Kết thúc Wave " + currentWave + " ===");
-
-        currentWave++;
-        zombiesPerWave += 5;
-
-        yield return new WaitForSeconds(5f);
-        StartCoroutine(StartWave());
+    }
+    private void UpdateZombieCountByWave()
+    {
+        // mỗi wave tăng thêm 5 zombie
+        zombiesPerWave = currentWave * 5;
     }
 }

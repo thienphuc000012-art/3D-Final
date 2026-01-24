@@ -13039,11 +13039,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1446448810882832555}
   - component: {fileID: 3851113221006588203}
-  - component: {fileID: 2257471433761853629}
   - component: {fileID: 8535263991564656986}
   m_Layer: 0
   m_Name: headhitbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -13078,25 +13077,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.34, y: 0.24, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2257471433761853629
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5623054824684011285}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f49c31f06f8175a47b00d9b6fd408903, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ZombieHitbox
-  hitboxType: 0
+  m_Size: {x: 0.34, y: 0.24, z: 0.37565643}
+  m_Center: {x: 0, y: 0, z: -0.049245685}
 --- !u!114 &8535263991564656986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14682,9 +14668,10 @@ GameObject:
   - component: {fileID: 7274176556057894380}
   - component: {fileID: 8615099944747659907}
   - component: {fileID: 4264020677182620610}
+  - component: {fileID: -8660294935543302957}
   m_Layer: 0
   m_Name: Enemy walk
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -14717,7 +14704,7 @@ Animator:
   m_GameObject: {fileID: 6634257854025271467}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 86eb473ebf2deef4b82084f07823747d, type: 3}
-  m_Controller: {fileID: 9100000, guid: d9ff251eae45dcf4ab973991f46fef9e, type: 2}
+  m_Controller: {fileID: 9100000, guid: 72316eeb1af9d774c8c5df44c6f6ae44, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -14738,7 +14725,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 6634257854025271467}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -14768,6 +14755,18 @@ MonoBehaviour:
   moveSpeed: 0.5
   maxHealth: 50
   startHealth: 50
+--- !u!114 &-8660294935543302957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6634257854025271467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3e5380b299e5a428f08b3d1f94c7f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
 --- !u!1 &6636391216150972202
 GameObject:
   m_ObjectHideFlags: 0
@@ -15395,11 +15394,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4163008420247724930}
   - component: {fileID: 7119691772149232161}
-  - component: {fileID: 3218876991386033106}
   - component: {fileID: 1067326254205046103}
   m_Layer: 0
   m_Name: bodyhitbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15434,25 +15432,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.48, y: 1.22, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3218876991386033106
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6857756085544590315}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f49c31f06f8175a47b00d9b6fd408903, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ZombieHitbox
-  hitboxType: 1
+  m_Size: {x: 0.48, y: 1.5303018, z: 0.4351468}
+  m_Center: {x: 0, y: 0.011999816, z: -0.06625879}
 --- !u!114 &1067326254205046103
 MonoBehaviour:
   m_ObjectHideFlags: 0
