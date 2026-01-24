@@ -2,17 +2,23 @@
 
 public class MouseLook : MonoBehaviour
 {
-    public Transform playerBody; // Kéo Player_T vào đây
-    public float sensitivity = 200f;
-    float xRotation = 0f;
-    bool isMouseLocked;
+    public Transform yaw;
+    public Transform pitch;
+
+    public float sensitivity = 120f;
+    public float minPitch = -85f;
+    public float maxPitch = 85f;
+
+    float yawValue;
+    float pitchValue;
 
     void Start()
     {
-        // Khóa chuột vào giữa màn hình
         Cursor.lockState = CursorLockMode.Locked;
-        // Ẩn con trỏ chuột đi
         Cursor.visible = false;
+
+        yawValue = yaw.localEulerAngles.y;
+        pitchValue = 0f;
     }
 
     void Update()
@@ -20,32 +26,11 @@ public class MouseLook : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
 
-        // 1. Xoay Lên/Xuống: Tác động vào chính CameraHolder (chứa Camera)
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        yawValue += mouseX;
+        pitchValue -= mouseY;
+        pitchValue = Mathf.Clamp(pitchValue, minPitch, maxPitch);
 
-        // 2. Xoay Trái/Phải: Tác động vào Player_T
-        if (playerBody != null)
-        {
-            playerBody.Rotate(Vector3.up * mouseX);
-        }
-
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            isMouseLocked = !isMouseLocked;
-        }
-
-        if(isMouseLocked)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        yaw.localRotation = Quaternion.Euler(0f, yawValue, 0f);
+        pitch.localRotation = Quaternion.Euler(pitchValue, 0f, 0f);
     }
 }

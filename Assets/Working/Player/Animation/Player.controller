@@ -65,7 +65,7 @@ AnimatorStateTransition:
   serializedVersion: 3
   m_TransitionDuration: 0
   m_TransitionOffset: 0
-  m_ExitTime: 0.06250006
+  m_ExitTime: 0
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -163,7 +163,7 @@ AnimatorController:
   - serializedVersion: 5
     m_Name: Gun Action
     m_StateMachine: {fileID: 8515507439100113507}
-    m_Mask: {fileID: 0}
+    m_Mask: {fileID: 31900000, guid: 969380a09e335914b9ccdfbe4a119b7c, type: 2}
     m_Motions: []
     m_Behaviours: []
     m_BlendingMode: 0
