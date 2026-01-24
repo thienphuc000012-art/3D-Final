@@ -63,7 +63,8 @@ public class Bullet : MonoBehaviour
         ZombieHitbox hitbox = collision.collider.GetComponent<ZombieHitbox>();
         if (hitbox != null)
         {
-            hitbox.ApplyDamage((int)damage);
+            Vector3 hitPoint = collision.contacts[0].point; // ✅ lấy điểm va chạm
+            hitbox.ApplyDamage((int)damage, hitPoint);
         }
         else
         {

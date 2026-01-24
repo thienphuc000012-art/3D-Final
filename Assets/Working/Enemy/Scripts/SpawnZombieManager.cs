@@ -44,6 +44,8 @@ public class SpawnZombieManager : MonoBehaviour
     private bool waveEnded = false;
     private int healthBonus = 0;
 
+    [Header("Player Settings")]
+    public PlayerHealth sharedPlayerHealth; // kéo thả Player vào đây
     void Start()
     {
         UpdateZombieCountByWave();
@@ -144,6 +146,9 @@ public class SpawnZombieManager : MonoBehaviour
                 zm.target = laneTargets[laneIndex];
                 zm.maxHealth += healthBonus;
                 zm.startHealth += healthBonus;
+
+                zm.sharedPlayerHealth = sharedPlayerHealth;
+
             }
 
             Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex + " offset Z: " + offset);
