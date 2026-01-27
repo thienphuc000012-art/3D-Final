@@ -1,0 +1,32 @@
+POV: FPS
+Player: Blinking Eyes
+
+POV: FPS
+Player: Stand up
+
+POV: FPS
+Player: Hear zombie noise
+
+POV: FPS
+Player: Looking back
+
+POV: FPS
+Player: Talking "Oh shit"
+
+POV: FPS
+Player: Start to run
+
+POV: FPS
+Player: Running
+
+POV: FPS
+Player: Looking Back
+
+POV: FPS - Zoom out - TPS
+Player: Running + Looking Back
+
+POV: TPS
+Player: Look up
+
+POV: TPS
+Player: Running toward the gate
