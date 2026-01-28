@@ -37,12 +37,8 @@ public class Gun : MonoBehaviour
     // VISUAL LEVEL
     // ==========================
     [Header("Gun Visual")]
-    public Transform modelHolder;              // EMPTY object
-    public GameObject[] gunLevelModels;        // prefab theo level
-    public Color[] gunLevelColors;             // màu theo level
-
-    [Header("Bullet Visual")]
-    public Color bulletColor = Color.red;
+    public Transform modelHolder;          // EMPTY object
+    public GameObject[] gunLevelModels;    // prefab gun đã có màu sẵn
 
     // ==========================
     // MAGAZINE
@@ -64,6 +60,9 @@ public class Gun : MonoBehaviour
     float currentBulletSpeed;
     float animSpeedMultiplier = 1f;
 
+    // 🔥 màu đạn hiện tại (lấy từ gun)
+    Color currentBulletColor = Color.white;
+
     // ==========================
     // INIT
     // ==========================
@@ -79,7 +78,7 @@ public class Gun : MonoBehaviour
             muzzleFlash.Clear();
         }
 
-        Debug.Log($"[GUN INIT] Lv {level} | EXP {currentExp}/{expToNextLevel}");
+        Debug.Log($"[GUN INIT] Lv {level}");
     }
 
     // ==========================
@@ -100,9 +99,9 @@ public class Gun : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R) && currentAmmo < gunData.magazineSize)
             StartCoroutine(Reload());
 
-        // DEBUG TEST
+        // DEBUG: nhấn L = lên đúng 1 level
         if (Input.GetKeyDown(KeyCode.L))
-            AddExp(999f);
+            DebugLevelUp();
     }
 
     // ==========================
@@ -117,6 +116,18 @@ public class Gun : MonoBehaviour
         pitch = Mathf.Clamp(pitch, -maxSpinePitch, maxSpinePitch);
 
         spineBone.localRotation = Quaternion.Euler(pitch * spineWeight, 0f, 0f);
+    }
+
+    // ==========================
+    // DEBUG LEVEL UP
+    // ==========================
+    void DebugLevelUp()
+    {
+        level++;
+        ApplyLevelStats();
+        UpdateGunVisual();
+
+        Debug.Log($"[DEBUG] Press L -> Lv {level}");
     }
 
     // ==========================
@@ -151,7 +162,7 @@ public class Gun : MonoBehaviour
             b.damage = currentDamage;
             b.SetDirection(dir);
             b.SetBulletSpeed(currentBulletSpeed);
-            b.SetColor(bulletColor);
+            b.SetColor(currentBulletColor); // ✅ màu đạn theo gun
         }
     }
 
@@ -178,7 +189,7 @@ public class Gun : MonoBehaviour
     }
 
     // ==========================
-    // EXP & LEVEL
+    // EXP & LEVEL (DÙNG KHI BẮN ENEMY)
     // ==========================
     public void AddExp(float amount)
     {
@@ -189,8 +200,6 @@ public class Gun : MonoBehaviour
             currentExp -= expToNextLevel;
             LevelUp();
         }
-
-        Debug.Log($"[GUN] Lv {level} | EXP {currentExp}/{expToNextLevel}");
     }
 
     void LevelUp()
@@ -201,14 +210,14 @@ public class Gun : MonoBehaviour
         ApplyLevelStats();
         UpdateGunVisual();
 
-        Debug.Log($"[GUN LEVEL UP] >>> Lv {level}");
+        Debug.Log($"[GUN LEVEL UP] -> Lv {level}");
     }
 
     void ApplyLevelStats()
     {
-        float dmgMul = 1f + (level - 1) * 1.0f;        // +100% dmg
-        float speedMul = 1f + (level - 1) * 0.2f;      // +20% speed
-        float reloadMul = Mathf.Pow(0.8f, level - 1); // -20% reload
+        float dmgMul = 1f + (level - 1) * 1.0f;
+        float speedMul = 1f + (level - 1) * 0.2f;
+        float reloadMul = Mathf.Pow(0.8f, level - 1);
         float animMul = 1f + (level - 1) * 0.2f;
 
         currentDamage = gunData.damage * dmgMul;
@@ -230,43 +239,42 @@ public class Gun : MonoBehaviour
         if (!modelHolder || gunLevelModels == null || gunLevelModels.Length == 0)
             return;
 
-        foreach (Transform c in modelHolder)
-            Destroy(c.gameObject);
+        // clear model cũ
+        for (int i = modelHolder.childCount - 1; i >= 0; i--)
+            Destroy(modelHolder.GetChild(i).gameObject);
 
         int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
 
-        GameObject model = Instantiate(
-            gunLevelModels[index],
-            modelHolder.position,
-            modelHolder.rotation,
-            modelHolder
-        );
+        Debug.Log($"[GUN MODEL] Level {level} -> index {index}");
 
-        ApplyGunColor(model);
+        GameObject model = Instantiate(gunLevelModels[index], modelHolder);
+
+        model.transform.localPosition = Vector3.zero;
+        model.transform.localRotation = Quaternion.identity;
+        model.transform.localScale = Vector3.one;
+
+        // ✅ lấy màu từ gun để gán cho bullet
+        CacheBulletColorFromModel(model);
     }
 
-    void ApplyGunColor(GameObject model)
+    // ==========================
+    // GET COLOR FROM GUN MODEL
+    // ==========================
+    void CacheBulletColorFromModel(GameObject model)
     {
-        if (gunLevelColors == null || gunLevelColors.Length == 0)
-            return;
+        Renderer r = model.GetComponentInChildren<Renderer>();
+        if (!r) return;
 
-        int index = Mathf.Clamp(level - 1, 0, gunLevelColors.Length - 1);
-        Color color = gunLevelColors[index];
+        Material mat = r.material;
 
-        Renderer[] renderers = model.GetComponentsInChildren<Renderer>();
-        MaterialPropertyBlock block = new MaterialPropertyBlock();
+        if (mat.HasProperty("_BaseColor"))
+            currentBulletColor = mat.GetColor("_BaseColor");
+        else if (mat.HasProperty("_Color"))
+            currentBulletColor = mat.GetColor("_Color");
+        else
+            currentBulletColor = Color.white;
 
-        foreach (Renderer r in renderers)
-        {
-            r.GetPropertyBlock(block);
-
-            if (r.sharedMaterial.HasProperty("_BaseColor"))
-                block.SetColor("_BaseColor", color);
-            else
-                block.SetColor("_Color", color);
-
-            r.SetPropertyBlock(block);
-        }
+        Debug.Log($"[BULLET COLOR] {currentBulletColor}");
     }
 
     // ==========================
