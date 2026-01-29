@@ -119,8 +119,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0
   tonemap:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 2
   tonemapAGXGamma:
     m_OverrideState: 0
     m_Value: 2.5
@@ -134,13 +134,13 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   saturate:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   brightness:
     m_OverrideState: 0
     m_Value: 1
   contrast:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   daltonize:
     m_OverrideState: 0
@@ -647,8 +647,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   vignettingBlink:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 0.194
   vignettingBlinkStyle:
     m_OverrideState: 0
     m_Value: 0
@@ -798,8 +798,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0.3
   blurIntensity:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 5.9
   blurStyle:
     m_OverrideState: 0
     m_Value: 0
