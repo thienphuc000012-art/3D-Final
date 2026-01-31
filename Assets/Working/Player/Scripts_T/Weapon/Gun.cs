@@ -4,63 +4,53 @@ using System.Collections;
 public class Gun : MonoBehaviour
 {
     // ==========================
-    // REFERENCES
+    // DATA
     // ==========================
-    [Header("References")]
+    [Header("DATA")]
     public GunData gunData;
-    public Transform firePoint;
-    public GameObject bulletPrefab;
-    public ParticleSystem muzzleFlash;
+
+    [Header("AIM")]
     public Camera aimCamera;
 
-    [Header("Animation")]
-    public Animator animator;
+    // ==========================
+    // VIEWMODEL (FPS)
+    // ==========================
+    [Header("VIEWMODEL")]
+    public Transform firePointVM;
+    public ParticleSystem muzzleFlashVM;
+    public Animator viewModelAnimator;
+    public Transform modelHolderVM;
 
     // ==========================
-    // SPINE AIM
+    // FULL BODY (3RD PERSON)
     // ==========================
-    [Header("Spine Aim")]
+    [Header("FULL BODY")]
+    public Animator fullBodyAnimator;
+    public Transform modelHolderFB;
+
+    [Header("SPINE AIM (FULL BODY ONLY)")]
     public Transform spineBone;
     public Transform cameraHolder;
     [Range(0f, 1f)] public float spineWeight = 0.3f;
     public float maxSpinePitch = 40f;
 
     // ==========================
-    // GUN LEVEL SYSTEM
+    // BULLET
     // ==========================
-    [Header("Gun Level System")]
-    public int level = 1;
-    public float currentExp = 0f;
-    public float expToNextLevel = 100f;
+    [Header("BULLET")]
+    public GameObject bulletPrefab;
 
     // ==========================
-    // VISUAL LEVEL
+    // LEVEL / VISUAL
     // ==========================
-    [Header("Gun Visual")]
-    public Transform modelHolder;          // EMPTY object
-    public GameObject[] gunLevelModels;    // prefab gun đã có màu sẵn
+    [Header("LEVEL VISUAL")]
+    public GameObject[] gunLevelModels;
 
-    // ==========================
-    // MAGAZINE
-    // ==========================
-    [Header("Magazine")]
-    public Transform magazineSocket;
-
-    // ==========================
-    // INTERNAL STATE
-    // ==========================
     int currentAmmo;
-    int reserveAmmo;
     float nextFireTime;
     bool isReloading;
+    int level = 1;
 
-    float currentDamage;
-    float currentFireRate;
-    float currentReloadTime;
-    float currentBulletSpeed;
-    float animSpeedMultiplier = 1f;
-
-    // 🔥 màu đạn hiện tại (lấy từ gun)
     Color currentBulletColor = Color.white;
 
     // ==========================
@@ -68,17 +58,8 @@ public class Gun : MonoBehaviour
     // ==========================
     void Start()
     {
-        ResetGunStats();
-        ApplyLevelStats();
+        currentAmmo = gunData.magazineSize;
         UpdateGunVisual();
-
-        if (muzzleFlash)
-        {
-            muzzleFlash.Stop();
-            muzzleFlash.Clear();
-        }
-
-        Debug.Log($"[GUN INIT] Lv {level}");
     }
 
     // ==========================
@@ -96,16 +77,12 @@ public class Gun : MonoBehaviour
                 StartCoroutine(Reload());
         }
 
-        if (Input.GetKeyDown(KeyCode.R) && currentAmmo < gunData.magazineSize)
+        if (Input.GetKeyDown(KeyCode.R))
             StartCoroutine(Reload());
-
-        // DEBUG: nhấn L = lên đúng 1 level
-        if (Input.GetKeyDown(KeyCode.L))
-            DebugLevelUp();
     }
 
     // ==========================
-    // SPINE AIM
+    // SPINE AIM (FULL BODY ONLY)
     // ==========================
     void LateUpdate()
     {
@@ -119,50 +96,41 @@ public class Gun : MonoBehaviour
     }
 
     // ==========================
-    // DEBUG LEVEL UP
-    // ==========================
-    void DebugLevelUp()
-    {
-        level++;
-        ApplyLevelStats();
-        UpdateGunVisual();
-
-        Debug.Log($"[DEBUG] Press L -> Lv {level}");
-    }
-
-    // ==========================
     // SHOOT
     // ==========================
     void Shoot()
     {
-        nextFireTime = Time.time + currentFireRate;
+        if (!aimCamera || !firePointVM || !bulletPrefab) return;
+
+        nextFireTime = Time.time + gunData.fireRate;
         currentAmmo--;
 
-        if (animator)
-        {
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
-            animator.SetTrigger("Shoot");
-        }
+        // ▶ animation
+        if (viewModelAnimator && viewModelAnimator.runtimeAnimatorController)
+            viewModelAnimator.SetTrigger("Shoot");
 
-        if (muzzleFlash)
-            muzzleFlash.Play();
+        if (fullBodyAnimator && fullBodyAnimator.runtimeAnimatorController)
+            fullBodyAnimator.SetTrigger("Shoot");
+
+        if (muzzleFlashVM)
+            muzzleFlashVM.Play();
 
         Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
         Vector3 dir = ray.direction;
 
         GameObject bullet = Instantiate(
             bulletPrefab,
-            firePoint.position,
+            firePointVM.position,
             Quaternion.LookRotation(dir)
         );
 
         Bullet b = bullet.GetComponent<Bullet>();
         if (b)
         {
-            b.damage = currentDamage;
+            b.damage = gunData.damage;
             b.SetDirection(dir);
-            b.SetBulletSpeed(currentBulletSpeed);
-            b.SetColor(currentBulletColor); // ✅ màu đạn theo gun
+            b.SetBulletSpeed(gunData.bulletSpeed);
+            b.SetColor(currentBulletColor);
         }
     }
 
@@ -171,123 +139,60 @@ public class Gun : MonoBehaviour
     // ==========================
     IEnumerator Reload()
     {
-        if (isReloading || reserveAmmo <= 0 || currentAmmo >= gunData.magazineSize)
-            yield break;
-
+        if (isReloading) yield break;
         isReloading = true;
 
-        if (animator)
-            animator.SetTrigger("Reload");
+        if (viewModelAnimator && viewModelAnimator.runtimeAnimatorController)
+            viewModelAnimator.SetTrigger("Reload");
 
-        yield return new WaitForSeconds(currentReloadTime);
+        if (fullBodyAnimator && fullBodyAnimator.runtimeAnimatorController)
+            fullBodyAnimator.SetTrigger("Reload");
 
-        int load = Mathf.Min(gunData.magazineSize - currentAmmo, reserveAmmo);
-        currentAmmo += load;
-        reserveAmmo -= load;
+        yield return new WaitForSeconds(gunData.reloadTime);
 
+        currentAmmo = gunData.magazineSize;
         isReloading = false;
     }
 
     // ==========================
-    // EXP & LEVEL (DÙNG KHI BẮN ENEMY)
-    // ==========================
-    public void AddExp(float amount)
-    {
-        currentExp += amount;
-
-        while (currentExp >= expToNextLevel)
-        {
-            currentExp -= expToNextLevel;
-            LevelUp();
-        }
-    }
-
-    void LevelUp()
-    {
-        level++;
-        expToNextLevel *= 1.5f;
-
-        ApplyLevelStats();
-        UpdateGunVisual();
-
-        Debug.Log($"[GUN LEVEL UP] -> Lv {level}");
-    }
-
-    void ApplyLevelStats()
-    {
-        float dmgMul = 1f + (level - 1) * 1.0f;
-        float speedMul = 1f + (level - 1) * 0.2f;
-        float reloadMul = Mathf.Pow(0.8f, level - 1);
-        float animMul = 1f + (level - 1) * 0.2f;
-
-        currentDamage = gunData.damage * dmgMul;
-        currentBulletSpeed = gunData.bulletSpeed * speedMul;
-        currentReloadTime = gunData.reloadTime * reloadMul;
-        currentFireRate = gunData.fireRate;
-
-        animSpeedMultiplier = animMul;
-
-        if (animator)
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
-    }
-
-    // ==========================
-    // VISUAL UPDATE
+    // VISUAL
     // ==========================
     void UpdateGunVisual()
     {
-        if (!modelHolder || gunLevelModels == null || gunLevelModels.Length == 0)
-            return;
-
-        // clear model cũ
-        for (int i = modelHolder.childCount - 1; i >= 0; i--)
-            Destroy(modelHolder.GetChild(i).gameObject);
-
         int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
 
-        Debug.Log($"[GUN MODEL] Level {level} -> index {index}");
+        ReplaceModel(modelHolderVM, gunLevelModels[index]);
+        ReplaceModel(modelHolderFB, gunLevelModels[index]);
 
-        GameObject model = Instantiate(gunLevelModels[index], modelHolder);
-
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.identity;
-        model.transform.localScale = Vector3.one;
-
-        // ✅ lấy màu từ gun để gán cho bullet
-        CacheBulletColorFromModel(model);
+        CacheBulletColorFromModel(gunLevelModels[index]);
     }
 
-    // ==========================
-    // GET COLOR FROM GUN MODEL
-    // ==========================
+    void ReplaceModel(Transform holder, GameObject prefab)
+    {
+        if (!holder || !prefab) return;
+
+        foreach (Transform child in holder)
+        {
+            if (child.name.Contains("Gun") || child.name.Contains("Weapon"))
+                Destroy(child.gameObject);
+        }
+
+        GameObject m = Instantiate(prefab, holder);
+        m.transform.localPosition = Vector3.zero;
+        m.transform.localRotation = Quaternion.identity;
+        m.transform.localScale = Vector3.one;
+    }
+
+
     void CacheBulletColorFromModel(GameObject model)
     {
         Renderer r = model.GetComponentInChildren<Renderer>();
         if (!r) return;
 
-        Material mat = r.material;
-
+        Material mat = r.sharedMaterial;
         if (mat.HasProperty("_BaseColor"))
             currentBulletColor = mat.GetColor("_BaseColor");
         else if (mat.HasProperty("_Color"))
             currentBulletColor = mat.GetColor("_Color");
-        else
-            currentBulletColor = Color.white;
-
-        Debug.Log($"[BULLET COLOR] {currentBulletColor}");
-    }
-
-    // ==========================
-    // RESET
-    // ==========================
-    public void ResetGunStats()
-    {
-        currentDamage = gunData.damage;
-        currentFireRate = gunData.fireRate;
-        currentReloadTime = gunData.reloadTime;
-        currentBulletSpeed = gunData.bulletSpeed;
-
-        currentAmmo = gunData.magazineSize;
-        reserveAmmo = gunData.maxAmmo;
     }
 }

@@ -2,35 +2,42 @@
 
 public class MouseLook : MonoBehaviour
 {
-    public Transform yaw;
-    public Transform pitch;
+    [Header("References")]
+    public Transform yawTransform;     // Player_T / Yaw
+    public Transform pitchTransform;   // Player_T / Yaw / Pitch
+    public Camera cam;                 // Main Camera
 
-    public float sensitivity = 120f;
-    public float minPitch = -85f;
-    public float maxPitch = 85f;
+    [Header("Settings")]
+    public float mouseSensitivity = 2f;
+    public float minPitch = -80f;
+    public float maxPitch = 80f;
 
-    float yawValue;
-    float pitchValue;
+    float pitch;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        yawValue = yaw.localEulerAngles.y;
-        pitchValue = 0f;
     }
 
     void Update()
     {
-        float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        yawValue += mouseX;
-        pitchValue -= mouseY;
-        pitchValue = Mathf.Clamp(pitchValue, minPitch, maxPitch);
+        // ===== YAW (xoay người) =====
+        yawTransform.Rotate(Vector3.up * mouseX);
 
-        yaw.localRotation = Quaternion.Euler(0f, yawValue, 0f);
-        pitch.localRotation = Quaternion.Euler(pitchValue, 0f, 0f);
+        // ===== PITCH (nhìn lên / xuống) =====
+        pitch -= mouseY;
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+        // CHỈ XOAY TRỤC X — KHÓA Y & Z
+        pitchTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+
+        // ===== FIX NGHIÊNG (ROLL) – CỰC KỲ QUAN TRỌNG =====
+        Vector3 camEuler = cam.transform.localEulerAngles;
+        camEuler.z = 0f;
+        cam.transform.localEulerAngles = camEuler;
     }
 }

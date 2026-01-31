@@ -1,43 +1,47 @@
 ﻿using UnityEngine;
 
-public class EnemyHealth : MonoBehaviour//, IDamageable
+public class EnemyHealth : MonoBehaviour
 {
-    public float maxHP = 50f;
-    float currentHP;
-    public float expDrop = 25f; // mỗi enemy cho bao nhiêu exp
+    [Header("Stats")]
+    public int maxHealth = 100;
+    public int currentHealth;
 
+    [Header("Optional")]
+    public GameObject deathVFX;
+    public float destroyDelay = 0.2f;
 
-    //void Start()
-    //{
-    //    currentHP = maxHP;
-    //}
+    bool isDead;
 
-    //public void TakeDamage(float damage)
-    //{
-    //    currentHP -= damage;
-    //    if (currentHP <= 0)
-    //        Die();
-    //}
+    void Awake()
+    {
+        currentHealth = maxHealth;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if (isDead) return;
+
+        currentHealth -= damage;
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
 
     void Die()
     {
-        // cộng EXP cho gun
-        Gun gun = FindObjectOfType<Gun>();
-        if (gun)
-            gun.AddExp(expDrop);
+        if (isDead) return;
+        isDead = true;
 
-        // giữ lại nếu bạn vẫn muốn test wave
-        if (WaveManager.Instance != null)
-            WaveManager.Instance.OnEnemyKilled();
+        // hiệu ứng chết (nếu có)
+        if (deathVFX)
+        {
+            Instantiate(deathVFX, transform.position, Quaternion.identity);
+        }
 
-        Invoke(nameof(Respawn), 1.5f);
-        gameObject.SetActive(false);
-    }
+        // TODO: sau này gọi event cộng exp, tăng score, v.v.
 
-
-    void Respawn()
-    {
-        currentHP = maxHP;
-        gameObject.SetActive(true);
+        Destroy(gameObject, destroyDelay);
     }
 }
