@@ -130,6 +130,10 @@ GameObject:
   - component: {fileID: 77348936}
   - component: {fileID: 77348935}
   - component: {fileID: 77348937}
+<<<<<<< HEAD:Assets/Scenes/CutScene/CutScene.unity
+=======
+  - component: {fileID: 77348938}
+>>>>>>> f0075ae (Figure out how to do animation with blink):Assets/Scenes/CutScene.unity
   m_Layer: 0
   m_Name: Global Volume
   m_TagString: Untagged
@@ -153,7 +157,11 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 0.995
+<<<<<<< HEAD:Assets/Scenes/CutScene/CutScene.unity
   sharedProfile: {fileID: 11400000, guid: 8e004ba9690851a45bb767d2d319b3e9, type: 2}
+=======
+  sharedProfile: {fileID: 11400000, guid: efb0a5dc71c424fabaae788534da781f, type: 2}
+>>>>>>> f0075ae (Figure out how to do animation with blink):Assets/Scenes/CutScene.unity
 --- !u!4 &77348936
 Transform:
   m_ObjectHideFlags: 0
@@ -185,6 +193,31 @@ MonoBehaviour:
   depthOfFieldTarget: {fileID: 0}
   depthOfFieldFocusPositionEnabled: 0
   depthOfFieldFocusPosition: {x: 0, y: 0, z: 0}
+<<<<<<< HEAD:Assets/Scenes/CutScene/CutScene.unity
+=======
+--- !u!95 &77348938
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 77348934}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 91878169a7272f44990ac78d21853829, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+>>>>>>> f0075ae (Figure out how to do animation with blink):Assets/Scenes/CutScene.unity
 --- !u!1 &85922379
 GameObject:
   m_ObjectHideFlags: 0
@@ -471,7 +504,10 @@ GameObject:
   - component: {fileID: 1556188734}
   - component: {fileID: 1556188733}
   - component: {fileID: 1556188736}
+<<<<<<< HEAD:Assets/Scenes/CutScene/CutScene.unity
   - component: {fileID: 1556188738}
+=======
+>>>>>>> f0075ae (Figure out how to do animation with blink):Assets/Scenes/CutScene.unity
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -546,13 +582,18 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1556188732}
   serializedVersion: 2
+<<<<<<< HEAD:Assets/Scenes/CutScene/CutScene.unity
   m_LocalRotation: {x: 0.58183914, y: 0, z: 0, w: 0.8133039}
   m_LocalPosition: {x: 0, y: 0.74, z: 0.33}
+=======
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -1.326, y: 1.139, z: 0.525}
+>>>>>>> f0075ae (Figure out how to do animation with blink):Assets/Scenes/CutScene.unity
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 403485958}
-  m_LocalEulerAnglesHint: {x: 71.16, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &1556188736
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -597,6 +638,7 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+<<<<<<< HEAD:Assets/Scenes/CutScene/CutScene.unity
 --- !u!114 &1556188738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -841,6 +883,8 @@ MonoBehaviour:
   _chromaticAberrationSmoothing: 0
   isDirty: 0
   bMat: {fileID: 0}
+=======
+>>>>>>> f0075ae (Figure out how to do animation with blink):Assets/Scenes/CutScene.unity
 --- !u!1 &1747315660
 GameObject:
   m_ObjectHideFlags: 0
@@ -915,11 +959,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 92c572c6248404242a4f7437c64b8c50, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -1.248
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92c572c6248404242a4f7437c64b8c50, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.332
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92c572c6248404242a4f7437c64b8c50, type: 3}
       propertyPath: m_LocalPosition.z

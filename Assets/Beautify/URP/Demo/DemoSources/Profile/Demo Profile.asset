@@ -119,8 +119,13 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0
   tonemap:
+<<<<<<< HEAD
     m_OverrideState: 0
     m_Value: 0
+=======
+    m_OverrideState: 1
+    m_Value: 1
+>>>>>>> f0075ae (Figure out how to do animation with blink)
   tonemapAGXGamma:
     m_OverrideState: 0
     m_Value: 2.5
@@ -647,8 +652,13 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   vignettingBlink:
+<<<<<<< HEAD
     m_OverrideState: 0
     m_Value: 0
+=======
+    m_OverrideState: 1
+    m_Value: 1
+>>>>>>> f0075ae (Figure out how to do animation with blink)
   vignettingBlinkStyle:
     m_OverrideState: 0
     m_Value: 0
@@ -798,8 +808,13 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0.3
   blurIntensity:
+<<<<<<< HEAD
     m_OverrideState: 0
     m_Value: 0
+=======
+    m_OverrideState: 1
+    m_Value: 7.3
+>>>>>>> f0075ae (Figure out how to do animation with blink)
   blurStyle:
     m_OverrideState: 0
     m_Value: 0
