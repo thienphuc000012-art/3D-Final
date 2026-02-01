@@ -12,6 +12,11 @@ public class EnemyHealth : MonoBehaviour
 
     bool isDead;
 
+    void Start()
+    {
+        currentHealth = maxHealth;
+    }
+
     void Awake()
     {
         currentHealth = maxHealth;

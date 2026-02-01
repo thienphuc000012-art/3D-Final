@@ -18,4 +18,4 @@ MonoBehaviour:
   reloadTime: 1.5
   bulletSpeed: 60
   magazineSize: 30
-  maxAmmo: 999
+  maxAmmo: 120
