@@ -3,8 +3,14 @@ using System.Collections;
 
 public class Gun : MonoBehaviour
 {
-    // ===================== DATA =====================
     public GunData gunData;
+
+    [Header("AUDIO")]
+    public AudioSource shootAudio;
+    public AudioSource reloadAudio;
+
+    public AudioClip shootClip;
+    public AudioClip reloadClip;
 
     [Header("AIM")]
     public Camera aimCamera;
@@ -137,6 +143,13 @@ public class Gun : MonoBehaviour
 
         Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
         Vector3 dir = ray.direction;
+        //SFX Shoot
+        if (shootAudio && shootClip)
+        {
+            shootAudio.pitch = Random.Range(0.95f, 1.05f); // cho nó tự nhiên
+            shootAudio.PlayOneShot(shootClip);
+        }
+
 
         // HITSCAN
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
@@ -180,6 +193,13 @@ public class Gun : MonoBehaviour
 
         currentAmmo = magazineSize;
         isReloading = false;
+
+        if (reloadAudio && reloadClip)
+        {
+            reloadAudio.pitch = 1f;
+            reloadAudio.PlayOneShot(reloadClip);
+        }
+
     }
 
 
@@ -242,6 +262,10 @@ public class Gun : MonoBehaviour
         int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
         ReplaceModel(modelHolderVM, gunLevelModels[index]);
         ReplaceModel(modelHolderFB, gunLevelModels[index]);
+        //Bullet color
+        var mesh = gunLevelModels[index].GetComponentInChildren<MeshRenderer>();
+        if (mesh)
+            currentBulletColor = mesh.sharedMaterial.color;
     }
 
     void ReplaceModel(Transform holder, GameObject prefab)
