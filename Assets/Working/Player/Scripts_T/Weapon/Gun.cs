@@ -3,90 +3,122 @@ using System.Collections;
 
 public class Gun : MonoBehaviour
 {
-    // ==========================
-    // REFERENCES
-    // ==========================
-    [Header("References")]
     public GunData gunData;
-    public Transform firePoint;
-    public GameObject bulletPrefab;
-    public ParticleSystem muzzleFlash;
+
+    [Header("AUDIO")]
+    public AudioSource shootAudio;
+    public AudioSource reloadAudio;
+
+    public AudioClip shootClip;
+    public AudioClip reloadClip;
+
+    [Header("AIM")]
     public Camera aimCamera;
 
-    [Header("Animation")]
-    public Animator animator;
+    [Header("VIEWMODEL")]
+    public Transform firePointVM;
+    public ParticleSystem muzzleFlashVM;
+    public Transform modelHolderVM;
 
-    // ==========================
-    // SPINE AIM
-    // ==========================
-    [Header("Spine Aim")]
-    public Transform spineBone;
-    public Transform cameraHolder;
-    [Range(0f, 1f)] public float spineWeight = 0.3f;
-    public float maxSpinePitch = 40f;
+    [Header("FULL BODY")]
+    public Transform modelHolderFB;
 
-    // ==========================
-    // GUN LEVEL SYSTEM
-    // ==========================
-    [Header("Gun Level System")]
+    [Header("ANIMATOR")]
+    public Animator viewModelAnimator;
+    public Animator fullBodyAnimator;
+
+    [Header("BULLET (VISUAL)")]
+    public GameObject bulletPrefab;
+
+    [Header("LEVEL VISUAL")]
+    public GameObject[] gunLevelModels;
+
+    // ===================== LEVEL =====================
     public int level = 1;
-    public float currentExp = 0f;
-    public float expToNextLevel = 100f;
+    public int maxLevel = 5;
+    public int currentExp = 0;
+    public int expToNextLevel = 10;
 
-    // ==========================
-    // VISUAL LEVEL
-    // ==========================
-    [Header("Gun Visual")]
-    public Transform modelHolder;          // EMPTY object
-    public GameObject[] gunLevelModels;    // prefab gun đã có màu sẵn
-
-    // ==========================
-    // MAGAZINE
-    // ==========================
-    [Header("Magazine")]
-    public Transform magazineSocket;
-
-    // ==========================
-    // INTERNAL STATE
-    // ==========================
+    // ===================== INTERNAL =====================
     int currentAmmo;
-    int reserveAmmo;
     float nextFireTime;
     bool isReloading;
+    bool requireReleaseFire;
 
-    float currentDamage;
-    float currentFireRate;
-    float currentReloadTime;
-    float currentBulletSpeed;
-    float animSpeedMultiplier = 1f;
-
-    // 🔥 màu đạn hiện tại (lấy từ gun)
     Color currentBulletColor = Color.white;
 
-    // ==========================
-    // INIT
-    // ==========================
+    // ===================== BASE STATS =====================
+    float baseDamage;
+    float baseFireCooldown;
+    float baseReloadTime;
+    float baseBulletSpeed;
+    int baseMagazineSize;
+
+    // ===================== RUNTIME STATS =====================
+    float damage;
+    float fireCooldown;
+    float reloadTime;
+    float bulletSpeed;
+    int magazineSize;
+
+    // ===================== ANIM HASH =====================
+    int reloadStateHash;
+
+    // ===================== INIT =====================
     void Start()
     {
-        ResetGunStats();
-        ApplyLevelStats();
+        reloadStateHash = Animator.StringToHash("Reloading"); // KHỚP TÊN STATE
+
+        CacheBaseStats();
+        ResetGunToLevel1();
         UpdateGunVisual();
-
-        if (muzzleFlash)
-        {
-            muzzleFlash.Stop();
-            muzzleFlash.Clear();
-        }
-
-        Debug.Log($"[GUN INIT] Lv {level}");
+        LogStats();
     }
 
-    // ==========================
-    // UPDATE
-    // ==========================
+    void CacheBaseStats()
+    {
+        baseDamage = gunData.damage;
+        baseFireCooldown = gunData.fireRate;
+        baseReloadTime = gunData.reloadTime;
+        baseBulletSpeed = gunData.bulletSpeed;
+        baseMagazineSize = gunData.magazineSize;
+    }
+
+    void ResetGunToLevel1()
+    {
+        level = 1;
+        currentExp = 0;
+        expToNextLevel = 10;
+
+        ApplyStatsByLevel();
+    }
+
+    // ===================== UPDATE =====================
     void Update()
     {
-        if (isReloading) return;
+        // ===== TEST LEVEL =====
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            Debug.Log("PRESS L");
+            LevelUp();
+        }
+
+        // ===== RELOAD BẰNG R (LUÔN HOẠT ĐỘNG) =====
+        if (Input.GetKeyDown(KeyCode.R) && !isReloading && currentAmmo < magazineSize)
+        {
+            StartCoroutine(Reload());
+            return;
+        }
+
+        // ===== KHÓA BẮN KHI ĐANG RELOAD =====
+        if (IsReloadAnimationPlaying())
+            return;
+
+        if (requireReleaseFire && !Input.GetButton("Fire1"))
+            requireReleaseFire = false;
+
+        if (isReloading || requireReleaseFire)
+            return;
 
         if (Input.GetButton("Fire1") && Time.time >= nextFireTime)
         {
@@ -95,199 +127,178 @@ public class Gun : MonoBehaviour
             else
                 StartCoroutine(Reload());
         }
-
-        if (Input.GetKeyDown(KeyCode.R) && currentAmmo < gunData.magazineSize)
-            StartCoroutine(Reload());
-
-        // DEBUG: nhấn L = lên đúng 1 level
-        if (Input.GetKeyDown(KeyCode.L))
-            DebugLevelUp();
     }
 
-    // ==========================
-    // SPINE AIM
-    // ==========================
-    void LateUpdate()
-    {
-        if (!spineBone || !cameraHolder) return;
-
-        float pitch = cameraHolder.localEulerAngles.x;
-        if (pitch > 180f) pitch -= 360f;
-        pitch = Mathf.Clamp(pitch, -maxSpinePitch, maxSpinePitch);
-
-        spineBone.localRotation = Quaternion.Euler(pitch * spineWeight, 0f, 0f);
-    }
-
-    // ==========================
-    // DEBUG LEVEL UP
-    // ==========================
-    void DebugLevelUp()
-    {
-        level++;
-        ApplyLevelStats();
-        UpdateGunVisual();
-
-        Debug.Log($"[DEBUG] Press L -> Lv {level}");
-    }
-
-    // ==========================
-    // SHOOT
-    // ==========================
+    // ===================== SHOOT =====================
     void Shoot()
     {
-        nextFireTime = Time.time + currentFireRate;
+        if (isReloading) return;
+
+        nextFireTime = Time.time + fireCooldown;
         currentAmmo--;
 
-        if (animator)
-        {
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
-            animator.SetTrigger("Shoot");
-        }
-
-        if (muzzleFlash)
-            muzzleFlash.Play();
+        PlayAnim(viewModelAnimator, "Shoot");
+        PlayAnim(fullBodyAnimator, "Shoot");
+        muzzleFlashVM?.Play();
 
         Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
         Vector3 dir = ray.direction;
-
-        GameObject bullet = Instantiate(
-            bulletPrefab,
-            firePoint.position,
-            Quaternion.LookRotation(dir)
-        );
-
-        Bullet b = bullet.GetComponent<Bullet>();
-        if (b)
+        //SFX Shoot
+        if (shootAudio && shootClip)
         {
-            b.damage = currentDamage;
-            b.SetDirection(dir);
-            b.SetBulletSpeed(currentBulletSpeed);
-            b.SetColor(currentBulletColor); // ✅ màu đạn theo gun
+            shootAudio.pitch = Random.Range(0.95f, 1.05f); // cho nó tự nhiên
+            shootAudio.PlayOneShot(shootClip);
+        }
+
+
+        // HITSCAN
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
+        {
+            Debug.Log($"Bullet hit: {hit.collider.name}");
+            // hit.collider.GetComponent<IDamageable>()?.TakeDamage(damage);
+        }
+
+        // VISUAL BULLET
+        if (bulletPrefab && firePointVM)
+        {
+            GameObject bullet = Instantiate(
+                bulletPrefab,
+                firePointVM.position,
+                Quaternion.LookRotation(dir)
+            );
+
+            Bullet b = bullet.GetComponent<Bullet>();
+            if (b)
+            {
+                b.damage = damage;
+                b.SetDirection(dir);
+                b.SetBulletSpeed(bulletSpeed);
+                b.SetColor(currentBulletColor);
+            }
         }
     }
 
-    // ==========================
-    // RELOAD
-    // ==========================
+    // ===================== RELOAD =====================
     IEnumerator Reload()
     {
-        if (isReloading || reserveAmmo <= 0 || currentAmmo >= gunData.magazineSize)
-            yield break;
+        if (isReloading) yield break;
 
         isReloading = true;
+        requireReleaseFire = true;
 
-        if (animator)
-            animator.SetTrigger("Reload");
+        PlayAnim(viewModelAnimator, "Reload");
+        PlayAnim(fullBodyAnimator, "Reload");
 
-        yield return new WaitForSeconds(currentReloadTime);
+        yield return new WaitForSeconds(reloadTime);
 
-        int load = Mathf.Min(gunData.magazineSize - currentAmmo, reserveAmmo);
-        currentAmmo += load;
-        reserveAmmo -= load;
-
+        currentAmmo = magazineSize;
         isReloading = false;
+
+        if (reloadAudio && reloadClip)
+        {
+            reloadAudio.pitch = 1f;
+            reloadAudio.PlayOneShot(reloadClip);
+        }
+
     }
 
-    // ==========================
-    // EXP & LEVEL (DÙNG KHI BẮN ENEMY)
-    // ==========================
-    public void AddExp(float amount)
+
+    // ===================== LEVEL =====================
+    public void AddExp(int amount)
     {
+        if (level >= maxLevel) return;
+
         currentExp += amount;
 
-        while (currentExp >= expToNextLevel)
+        if (currentExp >= expToNextLevel)
         {
-            currentExp -= expToNextLevel;
+            currentExp = 0;
             LevelUp();
         }
     }
 
     void LevelUp()
     {
+        if (level >= maxLevel) return;
+
         level++;
-        expToNextLevel *= 1.5f;
+        expToNextLevel = Mathf.RoundToInt(expToNextLevel * 1.2f);
 
-        ApplyLevelStats();
+        ApplyStatsByLevel();
         UpdateGunVisual();
-
-        Debug.Log($"[GUN LEVEL UP] -> Lv {level}");
+        LogStats();
     }
 
-    void ApplyLevelStats()
+    void ApplyStatsByLevel()
     {
-        float dmgMul = 1f + (level - 1) * 1.0f;
-        float speedMul = 1f + (level - 1) * 0.2f;
-        float reloadMul = Mathf.Pow(0.8f, level - 1);
-        float animMul = 1f + (level - 1) * 0.2f;
+        int lv = level - 1;
 
-        currentDamage = gunData.damage * dmgMul;
-        currentBulletSpeed = gunData.bulletSpeed * speedMul;
-        currentReloadTime = gunData.reloadTime * reloadMul;
-        currentFireRate = gunData.fireRate;
+        damage = baseDamage * (1f + 0.2f * lv);
+        fireCooldown = baseFireCooldown * Mathf.Pow(0.9f, lv);
+        reloadTime = baseReloadTime * Mathf.Pow(0.9f, lv);
+        bulletSpeed = baseBulletSpeed * (1f + 0.15f * lv);
+        magazineSize = baseMagazineSize + lv * 5;
 
-        animSpeedMultiplier = animMul;
-
-        if (animator)
-            animator.SetFloat("AnimSpeed", animSpeedMultiplier);
+        currentAmmo = magazineSize;
     }
 
-    // ==========================
-    // VISUAL UPDATE
-    // ==========================
+    // ===================== ANIM CHECK =====================
+    bool IsReloadAnimationPlaying()
+    {
+        if (!viewModelAnimator) return false;
+
+        AnimatorStateInfo state =
+            viewModelAnimator.GetCurrentAnimatorStateInfo(0);
+
+        return state.shortNameHash == reloadStateHash &&
+               state.normalizedTime < 1f;
+    }
+
+    // ===================== VISUAL =====================
     void UpdateGunVisual()
     {
-        if (!modelHolder || gunLevelModels == null || gunLevelModels.Length == 0)
-            return;
-
-        // clear model cũ
-        for (int i = modelHolder.childCount - 1; i >= 0; i--)
-            Destroy(modelHolder.GetChild(i).gameObject);
+        if (gunLevelModels.Length == 0) return;
 
         int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
-
-        Debug.Log($"[GUN MODEL] Level {level} -> index {index}");
-
-        GameObject model = Instantiate(gunLevelModels[index], modelHolder);
-
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.identity;
-        model.transform.localScale = Vector3.one;
-
-        // ✅ lấy màu từ gun để gán cho bullet
-        CacheBulletColorFromModel(model);
+        ReplaceModel(modelHolderVM, gunLevelModels[index]);
+        ReplaceModel(modelHolderFB, gunLevelModels[index]);
+        //Bullet color
+        var mesh = gunLevelModels[index].GetComponentInChildren<MeshRenderer>();
+        if (mesh)
+            currentBulletColor = mesh.sharedMaterial.color;
     }
 
-    // ==========================
-    // GET COLOR FROM GUN MODEL
-    // ==========================
-    void CacheBulletColorFromModel(GameObject model)
+    void ReplaceModel(Transform holder, GameObject prefab)
     {
-        Renderer r = model.GetComponentInChildren<Renderer>();
-        if (!r) return;
+        if (!holder || !prefab) return;
 
-        Material mat = r.material;
+        foreach (Transform c in holder)
+            Destroy(c.gameObject);
 
-        if (mat.HasProperty("_BaseColor"))
-            currentBulletColor = mat.GetColor("_BaseColor");
-        else if (mat.HasProperty("_Color"))
-            currentBulletColor = mat.GetColor("_Color");
-        else
-            currentBulletColor = Color.white;
-
-        Debug.Log($"[BULLET COLOR] {currentBulletColor}");
+        Instantiate(prefab, holder).transform.localPosition = Vector3.zero;
     }
 
-    // ==========================
-    // RESET
-    // ==========================
-    public void ResetGunStats()
+    // ===================== DEBUG =====================
+    void LogStats()
     {
-        currentDamage = gunData.damage;
-        currentFireRate = gunData.fireRate;
-        currentReloadTime = gunData.reloadTime;
-        currentBulletSpeed = gunData.bulletSpeed;
+        Debug.Log(
+            $"[GUN]\n" +
+            $"Lv {level}\n" +
+            $"DMG: {damage}\n" +
+            $"FireCooldown: {fireCooldown}\n" +
+            $"Reload: {reloadTime}\n" +
+            $"Mag: {magazineSize}\n" +
+            $"EXP: {currentExp}/{expToNextLevel}"
+        );
+    }
 
-        currentAmmo = gunData.magazineSize;
-        reserveAmmo = gunData.maxAmmo;
+    // ===================== UTILS =====================
+    void PlayAnim(Animator anim, string trigger)
+    {
+        if (!anim || !anim.isActiveAndEnabled || !anim.runtimeAnimatorController)
+            return;
+
+        anim.ResetTrigger(trigger);
+        anim.SetTrigger(trigger);
     }
 }

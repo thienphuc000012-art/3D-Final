@@ -75,6 +75,7 @@ public class Bullet : MonoBehaviour
                 health.TakeDamage((int)damage);
             }
         }
+        Debug.Log("Bullet hit: " + collision.collider.name);
 
         Destroy(gameObject);
     }
