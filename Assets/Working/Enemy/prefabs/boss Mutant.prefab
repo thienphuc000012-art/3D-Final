@@ -85,8 +85,16 @@ PrefabInstance:
       value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: zombieData
+      value: 
+      objectReference: {fileID: 11400000, guid: 66bb43ec767c6f742b5b0eb853df09e9, type: 2}
+    - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: startHealth
       value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: zombieTypeIndex
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8757696864070595596, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: m_LocalPosition.z

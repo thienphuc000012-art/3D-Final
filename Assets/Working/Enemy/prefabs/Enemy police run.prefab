@@ -168,6 +168,8 @@ MonoBehaviour:
   maxHealth: 50
   startHealth: 50
   bloodEffectPrefab: {fileID: 6096811365080657661, guid: b8a1eacd588268f4781454e80087ec8f, type: 3}
+  zombieTypeIndex: 1
+  zombieData: {fileID: 11400000, guid: 661d60694148ffb47bf6b0e28898189d, type: 2}
   sharedPlayerHealth: {fileID: 0}
 --- !u!114 &6182868290479070571
 MonoBehaviour:
