@@ -40,4 +40,11 @@ public class MouseLook : MonoBehaviour
         camEuler.z = 0f;
         cam.transform.localEulerAngles = camEuler;
     }
+
+    public void AddRecoil(float up, float side)
+    {
+        pitch -= up;
+        yawTransform.Rotate(Vector3.up * Random.Range(-side, side));
+    }
+
 }

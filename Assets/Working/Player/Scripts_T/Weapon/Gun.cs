@@ -33,6 +33,25 @@ public class Gun : MonoBehaviour
     [Header("LEVEL VISUAL")]
     public GameObject[] gunLevelModels;
 
+    [Header("ADS (Aiming)")]
+    public bool isAiming;
+    public float hipSpread = 0.015f;
+    public float adsSpread = 0f;
+
+    [Header("CAMERA RECOIL")]
+    public float hipCamRecoilUp = 1.2f;
+    public float hipCamRecoilSide = 0.6f;
+    public float adsCamRecoilUp = 0.15f;
+    public float adsCamRecoilSide = 0.1f;
+
+
+    // ===================== IRON-SIGHT ADS =====================
+    [Header("IRON-SIGHT POSITIONS")]
+    public Transform hipPosition;   // vị trí súng bình thường
+    public Transform adsPosition;   // vị trí iron-sight (ngắm thẳng tâm ruồi)
+    public float aimSpeed = 10f;    // tốc độ chuyển ADS
+
+
     // ===================== LEVEL =====================
     public int level = 1;
     public int maxLevel = 5;
@@ -46,6 +65,10 @@ public class Gun : MonoBehaviour
     bool requireReleaseFire;
 
     Color currentBulletColor = Color.white;
+
+    // SAVE VỊ TRÍ GỐC (FIX DRIFT)
+    Vector3 initialLocalPos;
+    Quaternion initialLocalRot;
 
     // ===================== BASE STATS =====================
     float baseDamage;
@@ -64,15 +87,20 @@ public class Gun : MonoBehaviour
     // ===================== ANIM HASH =====================
     int reloadStateHash;
 
+
+
     // ===================== INIT =====================
     void Start()
     {
-        reloadStateHash = Animator.StringToHash("Reloading"); // KHỚP TÊN STATE
+        reloadStateHash = Animator.StringToHash("Reloading");
 
         CacheBaseStats();
         ResetGunToLevel1();
         UpdateGunVisual();
         LogStats();
+
+        initialLocalPos = modelHolderVM.localPosition;
+        initialLocalRot = modelHolderVM.localRotation;
     }
 
     void CacheBaseStats()
@@ -93,32 +121,24 @@ public class Gun : MonoBehaviour
         ApplyStatsByLevel();
     }
 
+
     // ===================== UPDATE =====================
     void Update()
     {
-        // ===== TEST LEVEL =====
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            Debug.Log("PRESS L");
-            LevelUp();
-        }
+        if (Input.GetKeyDown(KeyCode.L)) LevelUp();
 
-        // ===== RELOAD BẰNG R (LUÔN HOẠT ĐỘNG) =====
         if (Input.GetKeyDown(KeyCode.R) && !isReloading && currentAmmo < magazineSize)
         {
             StartCoroutine(Reload());
             return;
         }
 
-        // ===== KHÓA BẮN KHI ĐANG RELOAD =====
-        if (IsReloadAnimationPlaying())
-            return;
+        if (IsReloadAnimationPlaying()) return;
 
         if (requireReleaseFire && !Input.GetButton("Fire1"))
             requireReleaseFire = false;
 
-        if (isReloading || requireReleaseFire)
-            return;
+        if (isReloading || requireReleaseFire) return;
 
         if (Input.GetButton("Fire1") && Time.time >= nextFireTime)
         {
@@ -127,7 +147,14 @@ public class Gun : MonoBehaviour
             else
                 StartCoroutine(Reload());
         }
+
+        isAiming = Input.GetButton("Fire2");
+
+        // 🎯 IRONSIGHT TRANSITION
+        HandleADS();
     }
+
+
 
     // ===================== SHOOT =====================
     void Shoot()
@@ -137,28 +164,55 @@ public class Gun : MonoBehaviour
         nextFireTime = Time.time + fireCooldown;
         currentAmmo--;
 
+        // CAMERA RECOIL (không ảnh hưởng hướng đạn!)
+        MouseLook mouseLook = aimCamera.GetComponentInParent<MouseLook>();
+        if (mouseLook)
+        {
+            if (!isAiming)
+                mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
+            else
+                mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
+        }
+
+        // Animation + Muzzle
         PlayAnim(viewModelAnimator, "Shoot");
         PlayAnim(fullBodyAnimator, "Shoot");
         muzzleFlashVM?.Play();
 
-        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-        Vector3 dir = ray.direction;
-        //SFX Shoot
+        Vector3 dir;
+
+        if (!isAiming)
+        {
+            // 🎯 HIP-FIRE: random circle spread
+            Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+            dir = ApplySpread(ray.direction, hipSpread);
+        }
+        else
+        {
+            // 🎯 ADS: đạn đi chính xác vào *nơi crosshair chỉ*
+            Ray camRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+
+            Vector3 targetPoint;
+
+            if (Physics.Raycast(camRay, out RaycastHit hit, 1000f))
+                targetPoint = hit.point;
+            else
+                targetPoint = camRay.GetPoint(1000f);
+
+            // DIRECTION từ nòng → target
+            dir = (targetPoint - firePointVM.position).normalized;
+        }
+
+
+        // Sound
         if (shootAudio && shootClip)
         {
-            shootAudio.pitch = Random.Range(0.95f, 1.05f); // cho nó tự nhiên
+            shootAudio.pitch = Random.Range(0.95f, 1.05f);
             shootAudio.PlayOneShot(shootClip);
         }
 
 
-        // HITSCAN
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
-        {
-            Debug.Log($"Bullet hit: {hit.collider.name}");
-            // hit.collider.GetComponent<IDamageable>()?.TakeDamage(damage);
-        }
-
-        // VISUAL BULLET
+        // SPAWN BULLET
         if (bulletPrefab && firePointVM)
         {
             GameObject bullet = Instantiate(
@@ -177,6 +231,50 @@ public class Gun : MonoBehaviour
             }
         }
     }
+
+
+
+    // ===================== IRON-SIGHT HANDLER =====================
+    void HandleADS()
+    {
+        if (!hipPosition || !adsPosition) return;
+
+        if (isAiming)
+        {
+            // Move vào iron-sight
+            modelHolderVM.localPosition =
+                Vector3.Lerp(modelHolderVM.localPosition, adsPosition.localPosition, Time.deltaTime * aimSpeed);
+
+            modelHolderVM.localRotation =
+                Quaternion.Slerp(modelHolderVM.localRotation, adsPosition.localRotation, Time.deltaTime * aimSpeed);
+        }
+        else
+        {
+            // Move về hip-fire
+            modelHolderVM.localPosition =
+                Vector3.Lerp(modelHolderVM.localPosition, hipPosition.localPosition, Time.deltaTime * aimSpeed);
+
+            modelHolderVM.localRotation =
+                Quaternion.Slerp(modelHolderVM.localRotation, hipPosition.localRotation, Time.deltaTime * aimSpeed);
+        }
+    }
+
+
+
+    // ===================== SPREAD =====================
+    Vector3 ApplySpread(Vector3 dir, float spread)
+    {
+        if (spread <= 0f) return dir;
+
+        Vector2 circle = Random.insideUnitCircle * spread;
+
+        dir += aimCamera.transform.right * circle.x;
+        dir += aimCamera.transform.up * circle.y;
+
+        return dir.normalized;
+    }
+
+
 
     // ===================== RELOAD =====================
     IEnumerator Reload()
@@ -199,8 +297,8 @@ public class Gun : MonoBehaviour
             reloadAudio.pitch = 1f;
             reloadAudio.PlayOneShot(reloadClip);
         }
-
     }
+
 
 
     // ===================== LEVEL =====================
@@ -242,6 +340,8 @@ public class Gun : MonoBehaviour
         currentAmmo = magazineSize;
     }
 
+
+
     // ===================== ANIM CHECK =====================
     bool IsReloadAnimationPlaying()
     {
@@ -254,7 +354,9 @@ public class Gun : MonoBehaviour
                state.normalizedTime < 1f;
     }
 
-    // ===================== VISUAL =====================
+
+
+    // ===================== VISUAL MODEL =====================
     void UpdateGunVisual()
     {
         if (gunLevelModels.Length == 0) return;
@@ -262,7 +364,7 @@ public class Gun : MonoBehaviour
         int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
         ReplaceModel(modelHolderVM, gunLevelModels[index]);
         ReplaceModel(modelHolderFB, gunLevelModels[index]);
-        //Bullet color
+
         var mesh = gunLevelModels[index].GetComponentInChildren<MeshRenderer>();
         if (mesh)
             currentBulletColor = mesh.sharedMaterial.color;
@@ -278,6 +380,8 @@ public class Gun : MonoBehaviour
         Instantiate(prefab, holder).transform.localPosition = Vector3.zero;
     }
 
+
+
     // ===================== DEBUG =====================
     void LogStats()
     {
@@ -291,6 +395,8 @@ public class Gun : MonoBehaviour
             $"EXP: {currentExp}/{expToNextLevel}"
         );
     }
+
+
 
     // ===================== UTILS =====================
     void PlayAnim(Animator anim, string trigger)
