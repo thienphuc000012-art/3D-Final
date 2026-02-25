@@ -21,7 +21,7 @@ public class Gun : MonoBehaviour
 
     [Header("MODEL ROOTS")]
     public Transform ADS_Parent;
-    public Transform recoilPivot;    // << NEW
+    public Transform recoilPivot;
     public Transform modelHolderVM;
     public Transform modelHolderFB;
 
@@ -51,7 +51,6 @@ public class Gun : MonoBehaviour
     public float adsCamRecoilUp = 0.15f;
     public float adsCamRecoilSide = 0.1f;
 
-    // ============= NEW: VIEWMODEL RECOIL =================
     [Header("VIEWMODEL RECOIL")]
     public float hipRecoilAmount = 4f;
     public float hipRecoilBack = 0.07f;
@@ -64,28 +63,31 @@ public class Gun : MonoBehaviour
     Vector3 viewmodelRecoilCurrent;
     Vector3 viewmodelRecoilTarget;
 
-    // ===================== LEVEL SYSTEM =====================
+    // LEVEL SYSTEM
     public int level = 1;
     public int maxLevel = 5;
     public int currentExp = 0;
     public int expToNextLevel = 10;
 
-    // ===================== INTERNAL =====================
+    // INTERNAL
     int currentAmmo;
     float nextFireTime;
     bool isReloading;
     bool requireReleaseFire;
 
+    float postReloadDelay = 1f;
+    bool lockFireAfterReload = false;
+
     Color currentBulletColor = Color.white;
 
-    // ===================== BASE STATS =====================
+    // BASE STATS
     float baseDamage;
     float baseFireCooldown;
     float baseReloadTime;
     float baseBulletSpeed;
     int baseMagazineSize;
 
-    // ===================== RUNTIME =====================
+    // RUNTIME
     float damage;
     float fireCooldown;
     float reloadTime;
@@ -94,7 +96,6 @@ public class Gun : MonoBehaviour
 
     int reloadStateHash;
 
-    // ===================== INIT =====================
     void Start()
     {
         reloadStateHash = Animator.StringToHash("Reloading");
@@ -123,10 +124,18 @@ public class Gun : MonoBehaviour
         ApplyStatsByLevel();
     }
 
-    // ===================== UPDATE =====================
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.L)) LevelUp();
+
+        // NEW — khoá bắn trong 1 giây sau reload
+        if (lockFireAfterReload)
+        {
+            if (Time.time >= nextFireTime)
+                lockFireAfterReload = false;
+
+            return;
+        }
 
         if (Input.GetKeyDown(KeyCode.R) && !isReloading && currentAmmo < magazineSize)
         {
@@ -159,24 +168,19 @@ public class Gun : MonoBehaviour
         {
             isAiming = aimingState;
 
-            if (isAiming)
-                FreezeAimingIdle();
-            else
-                UnfreezeAnim();
+            // ⛔ BỎ ĐOẠN FREEZE ANIMATION
+            // if (isAiming)
+            //     FreezeAimingIdle();
+            // else
+            //     UnfreezeAnim();
         }
 
         HandleADS();
-        HandleViewmodelRecoil();   // << NEW
+        HandleViewmodelRecoil();
     }
 
-    // ===================== Freeze animation =====================
-    void FreezeAimingIdle()
-    {
-        if (!viewModelAnimator) return;
-
-        viewModelAnimator.Play("Rifle_AimingIdle", 0, 0f);
-        viewModelAnimator.speed = 0f;
-    }
+    // ⛔ XOÁ HẲN FUNCTION (không dùng nữa)
+    // void FreezeAimingIdle() {}
 
     void UnfreezeAnim()
     {
@@ -184,7 +188,6 @@ public class Gun : MonoBehaviour
         viewModelAnimator.speed = 1f;
     }
 
-    // ===================== SHOOT =====================
     void Shoot()
     {
         if (isReloading) return;
@@ -192,20 +195,17 @@ public class Gun : MonoBehaviour
         nextFireTime = Time.time + fireCooldown;
         currentAmmo--;
 
-        // CAMERA RECOIL
         MouseLook mouseLook = aimCamera.GetComponentInParent<MouseLook>();
         if (mouseLook)
         {
             if (!isAiming)
                 mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
             else
-                mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
+                ;   // ⛔ ADS không recoil camera
         }
 
-        // VIEWMODEL RECOIL
         AddViewmodelRecoil();
 
-        // Anim
         PlayAnim(viewModelAnimator, "Shoot");
         PlayAnim(fullBodyAnimator, "Shoot");
 
@@ -254,18 +254,22 @@ public class Gun : MonoBehaviour
         }
     }
 
-    // ===================== VIEWMODEL RECOIL =====================
     void AddViewmodelRecoil()
     {
         if (!recoilPivot) return;
 
         if (!isAiming)
         {
-            viewmodelRecoilTarget += new Vector3(-hipRecoilAmount, Random.Range(-2f, 2f), hipRecoilBack);
+            viewmodelRecoilTarget += new Vector3(
+                -hipRecoilAmount,
+                Random.Range(-2f, 2f),
+                hipRecoilBack
+            );
         }
         else
         {
-            viewmodelRecoilTarget += new Vector3(-adsRecoilAmount, Random.Range(-0.4f, 0.4f), adsRecoilBack);
+            // ⛔ ADS không viewmodel recoil
+            return;
         }
     }
 
@@ -283,12 +287,10 @@ public class Gun : MonoBehaviour
             Time.deltaTime * recoilReturnSpeed
         );
 
-        // APPLY TO RECOIL PIVOT — NOT ADS PARENT
         if (recoilPivot)
             recoilPivot.localRotation = Quaternion.Euler(viewmodelRecoilCurrent);
     }
 
-    // ===================== ADS HANDLER =====================
     void HandleADS()
     {
         if (!hipPosition || !adsPosition || !ADS_Parent) return;
@@ -323,7 +325,6 @@ public class Gun : MonoBehaviour
         }
     }
 
-    // ===================== SPREAD =====================
     Vector3 ApplySpread(Vector3 dir, float spread)
     {
         if (spread <= 0f) return dir;
@@ -336,15 +337,14 @@ public class Gun : MonoBehaviour
         return dir.normalized;
     }
 
-    // ===================== RELOAD =====================
     IEnumerator Reload()
     {
-        UnfreezeAnim();
-
         if (isReloading) yield break;
 
         isReloading = true;
         requireReleaseFire = true;
+
+        UnfreezeAnim();
 
         PlayAnim(viewModelAnimator, "Reload");
         PlayAnim(fullBodyAnimator, "Reload");
@@ -354,10 +354,13 @@ public class Gun : MonoBehaviour
         currentAmmo = magazineSize;
         isReloading = false;
 
-        reloadAudio?.PlayOneShot(reloadClip);
+        if (reloadAudio && reloadClip)
+            reloadAudio.PlayOneShot(reloadClip);
+
+        lockFireAfterReload = true;
+        nextFireTime = Time.time + postReloadDelay;
     }
 
-    // ===================== LEVEL =====================
     public void AddExp(int amount)
     {
         if (level >= maxLevel) return;
@@ -396,7 +399,6 @@ public class Gun : MonoBehaviour
         currentAmmo = magazineSize;
     }
 
-    // ===================== ANIM CHECK =====================
     bool IsReloadAnimationPlaying()
     {
         if (!viewModelAnimator) return false;
@@ -406,7 +408,6 @@ public class Gun : MonoBehaviour
         return state.IsName("Reload") && state.normalizedTime < 1f;
     }
 
-    // ===================== VISUAL =====================
     void UpdateGunVisual()
     {
         if (gunLevelModels.Length == 0) return;
@@ -432,7 +433,6 @@ public class Gun : MonoBehaviour
         obj.transform.localRotation = Quaternion.identity;
     }
 
-    // ===================== UTIL =====================
     void PlayAnim(Animator anim, string trigger)
     {
         if (!anim || !anim.runtimeAnimatorController) return;
