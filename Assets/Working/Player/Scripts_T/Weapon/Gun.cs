@@ -6,7 +6,7 @@ public class Gun : MonoBehaviour
     public GunData gunData;
 
     [Header("CROSSHAIR")]
-    public GameObject crosshairUI;   // <-- thêm cái này
+    public GameObject crosshairUI;
 
     [Header("AUDIO")]
     public AudioSource shootAudio;
@@ -16,6 +16,11 @@ public class Gun : MonoBehaviour
 
     [Header("AIM CAMERA")]
     public Camera aimCamera;
+
+    [Header("ADS ZOOM")]
+    public float hipFOV = 70f;
+    public float adsFOV = 45f;
+    public float fovLerpSpeed = 10f;
 
     [Header("VIEWMODEL")]
     public Transform firePointVM;
@@ -102,22 +107,24 @@ public class Gun : MonoBehaviour
     float bulletSpeed;
     int magazineSize;
 
-    int reloadStateHash;
-
     // BURST
     bool isBurstFiring = false;
-    public int burstCount = 2; // 2 viên khi aim
+    public int burstCount = 3; // ADS bắn 3 viên
 
+    // ADS STATE CONTROL
+    bool wantADS;
+    bool forceHipByReload = false;
+
+    // RELOAD COOLDOWN
+    bool canReload = true;
+    public float reloadCooldown = 1f;
 
     void Start()
     {
-        reloadStateHash = Animator.StringToHash("Reloading");
-
         CacheBaseStats();
         ResetGunToLevel1();
         UpdateGunVisual();
         AttachMagByLevel();
-
         LogStats();
     }
 
@@ -140,11 +147,33 @@ public class Gun : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.L)) LevelUp();
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LevelUp();
+        }
 
-        // Ẩn crosshair khi aim
+        // ADS input
+        wantADS = Input.GetButton("Fire2");
+
+        // nếu đang reload → ép HIP
+        if (forceHipByReload)
+        {
+            isAiming = false;
+        }
+        else
+        {
+            isAiming = wantADS;
+        }
+
+        if (viewModelAnimator)
+            viewModelAnimator.SetBool("isAiming", isAiming);
+
         if (crosshairUI)
             crosshairUI.SetActive(!isAiming);
+
+        HandleADS();
+        HandleADSZoom();
+        HandleViewmodelRecoil();
 
         if (lockFireAfterReload)
         {
@@ -153,24 +182,32 @@ public class Gun : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.R) && !isReloading && currentAmmo < magazineSize)
+        if (Input.GetKeyDown(KeyCode.R) && canReload && !isReloading && currentAmmo < magazineSize)
         {
             UnfreezeAnim();
             StartCoroutine(Reload());
             return;
         }
 
-        if (IsReloadAnimationPlaying()) return;
-
         if (requireReleaseFire && !Input.GetButton("Fire1"))
             requireReleaseFire = false;
 
         if (isReloading || requireReleaseFire) return;
 
-        // ----------------------------
-        // FIRE INPUT
-        // ----------------------------
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
+        // HIP → AUTO
+        if (!isAiming && Input.GetButton("Fire1") && Time.time >= nextFireTime)
+        {
+            if (currentAmmo <= 0)
+            {
+                UnfreezeAnim();
+                StartCoroutine(Reload());
+                return;
+            }
+            Shoot();
+        }
+
+        // ADS → BURST
+        if (isAiming && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
         {
             if (currentAmmo <= 0)
             {
@@ -179,26 +216,9 @@ public class Gun : MonoBehaviour
                 return;
             }
 
-            if (isAiming)
-            {
-                // Bắn burst 2 viên
-                if (!isBurstFiring)
-                    StartCoroutine(BurstFire());
-            }
-            else
-            {
-                // Bắn thường
-                Shoot();
-            }
+            if (!isBurstFiring)
+                StartCoroutine(BurstFire());
         }
-
-        // ADS
-        bool aimingState = Input.GetButton("Fire2");
-        if (aimingState != isAiming)
-            isAiming = aimingState;
-
-        HandleADS();
-        HandleViewmodelRecoil();
     }
 
     IEnumerator BurstFire()
@@ -206,35 +226,30 @@ public class Gun : MonoBehaviour
         isBurstFiring = true;
 
         int bulletsToFire = burstCount;
-
         while (bulletsToFire > 0 && currentAmmo > 0)
         {
             Shoot();
             bulletsToFire--;
-
             yield return new WaitForSeconds(fireCooldown);
         }
 
-        nextFireTime = Time.time + fireCooldown; // chống spam click
+        nextFireTime = Time.time + fireCooldown;
         isBurstFiring = false;
-    }
-
-    void UnfreezeAnim()
-    {
-        if (!viewModelAnimator) return;
-        viewModelAnimator.speed = 1f;
     }
 
     void Shoot()
     {
-        if (isReloading) return;
-
         nextFireTime = Time.time + fireCooldown;
         currentAmmo--;
 
         MouseLook mouseLook = aimCamera.GetComponentInParent<MouseLook>();
-        if (mouseLook && !isAiming)
-            mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
+        if (mouseLook)
+        {
+            if (isAiming)
+                mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
+            else
+                mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
+        }
 
         AddViewmodelRecoil();
 
@@ -260,12 +275,9 @@ public class Gun : MonoBehaviour
         }
 
         if (shootAudio && shootClip)
-        {
-            shootAudio.pitch = Random.Range(0.95f, 1.05f);
             shootAudio.PlayOneShot(shootClip);
-        }
 
-        if (bulletPrefab && firePointVM)
+        if (bulletPrefab)
         {
             GameObject bullet = Instantiate(
                 bulletPrefab,
@@ -286,12 +298,15 @@ public class Gun : MonoBehaviour
 
     void AddViewmodelRecoil()
     {
-        if (!recoilPivot || isAiming) return;
+        if (!recoilPivot) return;
+
+        float recoil = isAiming ? adsRecoilAmount : hipRecoilAmount;
+        float back = isAiming ? adsRecoilBack : hipRecoilBack;
 
         viewmodelRecoilTarget += new Vector3(
-            -hipRecoilAmount,
-            Random.Range(-2f, 2f),
-            hipRecoilBack
+            -recoil,
+            Random.Range(-1f, 1f),
+            back
         );
     }
 
@@ -332,23 +347,42 @@ public class Gun : MonoBehaviour
         );
     }
 
+    void HandleADSZoom()
+    {
+        if (!aimCamera) return;
+
+        float targetFOV = isAiming ? adsFOV : hipFOV;
+        aimCamera.fieldOfView = Mathf.Lerp(
+            aimCamera.fieldOfView,
+            targetFOV,
+            Time.deltaTime * fovLerpSpeed
+        );
+    }
+
     Vector3 ApplySpread(Vector3 dir, float spread)
     {
-        if (spread <= 0f) return dir;
-
         Vector2 circle = Random.insideUnitCircle * spread;
         dir += aimCamera.transform.right * circle.x;
         dir += aimCamera.transform.up * circle.y;
-
         return dir.normalized;
     }
-
     IEnumerator Reload()
     {
-        if (isReloading) yield break;
+        if (isReloading || !canReload) yield break;
 
         isReloading = true;
+        canReload = false;
         requireReleaseFire = true;
+
+        // 1️⃣ ÉP HIP KHI RELOAD
+        forceHipByReload = true;
+        isAiming = false;
+
+        if (viewModelAnimator)
+            viewModelAnimator.SetBool("isAiming", false);
+
+        if (crosshairUI)
+            crosshairUI.SetActive(true);
 
         UnfreezeAnim();
         PlayAnim(viewModelAnimator, "Reload");
@@ -356,65 +390,47 @@ public class Gun : MonoBehaviour
 
         yield return new WaitForSeconds(reloadTime);
 
+        // Nạp đạn
         currentAmmo = magazineSize;
         isReloading = false;
 
-        if (reloadAudio && reloadClip)
-            reloadAudio.PlayOneShot(reloadClip);
+        reloadAudio?.PlayOneShot(reloadClip);
 
+        // 2️⃣ SAU RELOAD: TRẢ QUYỀN ADS
+        forceHipByReload = false;
+
+        if (wantADS)
+            isAiming = true;
+        else
+            isAiming = false;
+
+        // 3️⃣ LOCK FIRE + COOLDOWN RELOAD
         lockFireAfterReload = true;
         nextFireTime = Time.time + postReloadDelay;
+
+        yield return new WaitForSeconds(reloadCooldown);
+        canReload = true;
     }
 
-    public void AddExp(int amount)
+    void UnfreezeAnim()
     {
-        if (level >= maxLevel) return;
-
-        currentExp += amount;
-        if (currentExp >= expToNextLevel)
-        {
-            currentExp = 0;
-            LevelUp();
-        }
-    }
-
-    void LevelUp()
-    {
-        if (level >= maxLevel) return;
-
-        level++;
-        expToNextLevel = Mathf.RoundToInt(expToNextLevel * 1.2f);
-
-        ApplyStatsByLevel();
-        UpdateGunVisual();
-        AttachMagByLevel();
-        LogStats();
+        if (!viewModelAnimator) return;
+        viewModelAnimator.speed = 1f;
     }
 
     void ApplyStatsByLevel()
     {
         int lv = level - 1;
-
         damage = baseDamage * (1f + 0.2f * lv);
         fireCooldown = baseFireCooldown * Mathf.Pow(0.9f, lv);
         reloadTime = baseReloadTime * Mathf.Pow(0.9f, lv);
         bulletSpeed = baseBulletSpeed * (1f + 0.15f * lv);
         magazineSize = baseMagazineSize + lv * 5;
-
         currentAmmo = magazineSize;
-    }
-
-    bool IsReloadAnimationPlaying()
-    {
-        if (!viewModelAnimator) return false;
-        AnimatorStateInfo state = viewModelAnimator.GetCurrentAnimatorStateInfo(0);
-        return state.IsName("Reload") && state.normalizedTime < 1f;
     }
 
     void UpdateGunVisual()
     {
-        if (gunLevelModels.Length == 0) return;
-
         int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
         ReplaceModel(modelHolderVM, gunLevelModels[index]);
         ReplaceModel(modelHolderFB, gunLevelModels[index]);
@@ -424,32 +440,8 @@ public class Gun : MonoBehaviour
             currentBulletColor = mesh.sharedMaterial.color;
     }
 
-    void ApplyMagColor(Color color)
-    {
-        if (currentMagVM)
-            ApplyColorToMag(currentMagVM, color);
-
-        if (currentMagFB)
-            ApplyColorToMag(currentMagFB, color);
-    }
-
-    void ApplyColorToMag(GameObject mag, Color color)
-    {
-        var renderers = mag.GetComponentsInChildren<MeshRenderer>();
-        foreach (var r in renderers)
-        {
-            foreach (var mat in r.materials)
-            {
-                if (mat.HasProperty("_Color"))
-                    mat.color = color;
-            }
-        }
-    }
-
     void ReplaceModel(Transform holder, GameObject prefab)
     {
-        if (!holder || !prefab) return;
-
         foreach (Transform c in holder)
             Destroy(c.gameObject);
 
@@ -460,28 +452,23 @@ public class Gun : MonoBehaviour
 
     void AttachMagByLevel()
     {
-        if (magLevelPrefabs.Length == 0) return;
-
         int index = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
-        GameObject prefab = magLevelPrefabs[index];
 
         if (currentMagVM) Destroy(currentMagVM);
         if (currentMagFB) Destroy(currentMagFB);
 
         if (magSocketVM)
         {
-            currentMagVM = Instantiate(prefab, magSocketVM);
+            currentMagVM = Instantiate(magLevelPrefabs[index], magSocketVM);
             currentMagVM.transform.localPosition = Vector3.zero;
             currentMagVM.transform.localRotation = Quaternion.identity;
-            currentMagVM.transform.localScale = Vector3.one;
         }
 
         if (magSocketFB)
         {
-            currentMagFB = Instantiate(prefab, magSocketFB);
+            currentMagFB = Instantiate(magLevelPrefabs[index], magSocketFB);
             currentMagFB.transform.localPosition = Vector3.zero;
             currentMagFB.transform.localRotation = Quaternion.identity;
-            currentMagFB.transform.localScale = Vector3.one;
         }
     }
 
@@ -492,8 +479,22 @@ public class Gun : MonoBehaviour
         anim.SetTrigger(trigger);
     }
 
+    void LevelUp()
+    {
+        if (level >= maxLevel) return;
+
+        level++;
+        currentExp = 0;
+
+        ApplyStatsByLevel();
+        UpdateGunVisual();
+        AttachMagByLevel();
+
+        LogStats();
+    }
+
     void LogStats()
     {
-        Debug.Log($"[GUN]\nLv {level}\nDMG: {damage}\nFireCooldown: {fireCooldown}\nReload: {reloadTime}\nMag: {magazineSize}\nEXP: {currentExp}/{expToNextLevel}");
+        Debug.Log($"[GUN]\nLv {level}\nDMG: {damage}\nFireCooldown: {fireCooldown}\nReload: {reloadTime}\nMag: {magazineSize}");
     }
 }
