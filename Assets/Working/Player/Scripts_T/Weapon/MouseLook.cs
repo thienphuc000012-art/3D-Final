@@ -9,15 +9,28 @@ public class MouseLook : MonoBehaviour
 
     [Header("Settings")]
     public float mouseSensitivity = 2f;
-    public float minPitch = -80f;
-    public float maxPitch = 80f;
+
+    [Header("Vertical Clamp")]
+    public float minPitch = -45f;
+    public float maxPitch = 45f;
+
+    [Header("Horizontal Clamp")]
+    public float minYaw = -90f;
+    public float maxYaw = 90f;
 
     float pitch;
+    float yaw;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Lưu góc ban đầu làm tâm
+        yaw = yawTransform.localEulerAngles.y;
+
+        // Fix trường hợp >180
+        if (yaw > 180f) yaw -= 360f;
     }
 
     void Update()
@@ -25,17 +38,17 @@ public class MouseLook : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        // ===== YAW (xoay người) =====
-        yawTransform.Rotate(Vector3.up * mouseX);
+        // ===== YAW =====
+        yaw += mouseX;
+        yaw = Mathf.Clamp(yaw, minYaw, maxYaw);
+        yawTransform.localRotation = Quaternion.Euler(0f, yaw, 0f);
 
-        // ===== PITCH (nhìn lên / xuống) =====
+        // ===== PITCH =====
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-
-        // CHỈ XOAY TRỤC X — KHÓA Y & Z
         pitchTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
 
-        // ===== FIX NGHIÊNG (ROLL) – CỰC KỲ QUAN TRỌNG =====
+        // ===== FIX ROLL =====
         Vector3 camEuler = cam.transform.localEulerAngles;
         camEuler.z = 0f;
         cam.transform.localEulerAngles = camEuler;
@@ -44,7 +57,12 @@ public class MouseLook : MonoBehaviour
     public void AddRecoil(float up, float side)
     {
         pitch -= up;
-        yawTransform.Rotate(Vector3.up * Random.Range(-side, side));
-    }
+        yaw += Random.Range(-side, side);
 
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+        yaw = Mathf.Clamp(yaw, minYaw, maxYaw);
+
+        yawTransform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+        pitchTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+    }
 }

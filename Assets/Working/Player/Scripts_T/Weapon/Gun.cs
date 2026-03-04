@@ -3,122 +3,113 @@ using System.Collections;
 
 public class Gun : MonoBehaviour
 {
+    // ===================== Inspector Data =====================
     public GunData gunData;
 
-    [Header("CROSSHAIR")]
+    [Header("UI")]
     public GameObject crosshairUI;
 
-    [Header("AUDIO")]
+    [Header("Audio")]
     public AudioSource shootAudio;
     public AudioSource reloadAudio;
     public AudioClip shootClip;
     public AudioClip reloadClip;
 
-    [Header("AIM CAMERA")]
+    [Header("Camera")]
     public Camera aimCamera;
-
-    [Header("ADS ZOOM")]
     public float hipFOV = 70f;
     public float adsFOV = 45f;
     public float fovLerpSpeed = 10f;
 
-    [Header("VIEWMODEL")]
+    [Header("Viewmodel")]
     public Transform firePointVM;
     public ParticleSystem muzzleFlashVM;
-
-    [Header("MODEL ROOTS")]
     public Transform ADS_Parent;
     public Transform recoilPivot;
     public Transform modelHolderVM;
     public Transform modelHolderFB;
 
-    [Header("ANIMATOR")]
+    [Header("Animator")]
     public Animator viewModelAnimator;
     public Animator fullBodyAnimator;
 
-    [Header("BULLET VISUAL")]
+    [Header("Bullet Visual")]
     public GameObject bulletPrefab;
 
-    [Header("LEVEL VISUAL")]
+    [Header("Level Visual")]
     public GameObject[] gunLevelModels;
 
-    [Header("MAG SYSTEM")]
+    [Header("Mag System")]
     public Transform magSocketVM;
     public Transform magSocketFB;
     public GameObject[] magLevelPrefabs;
 
-    GameObject currentMagVM;
-    GameObject currentMagFB;
+    [Header("Mag Hand")]
+    public Transform leftHandMagHoldVM;
+    public Transform leftHandMagHoldFB;
 
-    [Header("ADS SETTINGS")]
+    [Header("Reload Timing (0-1)")]
+    public float magDetachTime = 0.20f;
+    public float magSpawnTime = 0.30f;
+    public float magAttachTime = 1f;
+
+    [Header("ADS Settings")]
     public bool isAiming;
     public float hipSpread = 0.015f;
     public float adsSpread = 0f;
     public float aimSpeed = 12f;
-
-    [Header("IRON-SIGHT POSITIONS")]
     public Transform hipPosition;
     public Transform adsPosition;
 
-    [Header("CAMERA RECOIL")]
+    [Header("Camera Recoil")]
     public float hipCamRecoilUp = 1.2f;
     public float hipCamRecoilSide = 0.6f;
     public float adsCamRecoilUp = 0.15f;
     public float adsCamRecoilSide = 0.1f;
 
-    [Header("VIEWMODEL RECOIL")]
+    [Header("Viewmodel Recoil")]
     public float hipRecoilAmount = 4f;
     public float hipRecoilBack = 0.07f;
     public float adsRecoilAmount = 1.1f;
     public float adsRecoilBack = 0.02f;
     public float recoilReturnSpeed = 8f;
 
-    Vector3 viewmodelRecoilCurrent;
-    Vector3 viewmodelRecoilTarget;
-
-    // LEVEL SYSTEM
+    // ===================== Level =====================
     public int level = 1;
     public int maxLevel = 5;
     public int currentExp = 0;
     public int expToNextLevel = 10;
 
-    // INTERNAL
+    // ===================== Runtime =====================
     int currentAmmo;
     float nextFireTime;
     bool isReloading;
     bool requireReleaseFire;
+    bool lockFireAfterReload;
+    bool forceHipByReload;
+    bool canReload = true;
 
-    float postReloadDelay = 1f;
-    bool lockFireAfterReload = false;
-
-    Color currentBulletColor = Color.white;
-
-    // BASE STATS
-    float baseDamage;
-    float baseFireCooldown;
-    float baseReloadTime;
-    float baseBulletSpeed;
-    int baseMagazineSize;
-
-    // RUNTIME
-    float damage;
-    float fireCooldown;
-    float reloadTime;
-    float bulletSpeed;
+    float damage, fireCooldown, reloadTime, bulletSpeed;
     int magazineSize;
 
-    // BURST
-    bool isBurstFiring = false;
-    public int burstCount = 3; // ADS bắn 3 viên
+    Color currentBulletColor = Color.white;
+    Vector3 vmRecoilCur, vmRecoilTarget;
+    Vector3 fireModeJiggleRotation;
 
-    // ADS STATE CONTROL
-    bool wantADS;
-    bool forceHipByReload = false;
+    float reloadElapsed;
+    GameObject currentMagVM, currentMagFB;
+    GameObject oldMagVM, oldMagFB;
 
-    // RELOAD COOLDOWN
-    bool canReload = true;
     public float reloadCooldown = 1f;
+    float postReloadDelay = 1f;
 
+    public int burstCount = 3;
+    bool isBurstFiring;
+
+    public enum FireMode { Semi, Auto }
+    public FireMode fireMode = FireMode.Auto;
+
+    // ===================== Start =====================
     void Start()
     {
         CacheBaseStats();
@@ -130,162 +121,133 @@ public class Gun : MonoBehaviour
 
     void CacheBaseStats()
     {
-        baseDamage = gunData.damage;
-        baseFireCooldown = gunData.fireRate;
-        baseReloadTime = gunData.reloadTime;
-        baseBulletSpeed = gunData.bulletSpeed;
-        baseMagazineSize = gunData.magazineSize;
+        damage = gunData.damage;
+        fireCooldown = gunData.fireRate;
+        reloadTime = gunData.reloadTime;
+        bulletSpeed = gunData.bulletSpeed;
+        magazineSize = gunData.magazineSize;
+        currentAmmo = magazineSize;
     }
 
     void ResetGunToLevel1()
     {
         level = 1;
-        currentExp = 0;
-        expToNextLevel = 10;
         ApplyStatsByLevel();
     }
 
+    // ===================== Update =====================
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            LevelUp();
-        }
-
-        // ADS input
-        wantADS = Input.GetButton("Fire2");
-
-        // nếu đang reload → ép HIP
-        if (forceHipByReload)
-        {
-            isAiming = false;
-        }
-        else
-        {
-            isAiming = wantADS;
-        }
-
-        if (viewModelAnimator)
-            viewModelAnimator.SetBool("isAiming", isAiming);
-
-        if (crosshairUI)
-            crosshairUI.SetActive(!isAiming);
-
-        HandleADS();
-        HandleADSZoom();
+        HandleInput();
+        HandleADSAll();
         HandleViewmodelRecoil();
 
-        if (lockFireAfterReload)
-        {
-            if (Time.time >= nextFireTime)
-                lockFireAfterReload = false;
-            return;
-        }
+        if (CheckFireLocked()) return;
+        if (TryReload()) return;
+        if (HandleEmptyFire()) return;
 
+        HandleFireProcess();
+    }
+
+    // ============================================================
+    // ===================== INPUT ================================
+    // ============================================================
+    void HandleInput()
+    {
+        isAiming = forceHipByReload ? false : Input.GetButton("Fire2");
+        viewModelAnimator?.SetBool("isAiming", isAiming);
+        crosshairUI?.SetActive(!isAiming);
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            fireMode = (fireMode == FireMode.Auto) ? FireMode.Semi : FireMode.Auto;
+            Debug.Log("Fire Mode: " + fireMode);
+            StartCoroutine(FireModeJiggle());
+        }
+    }
+
+    bool CheckFireLocked()
+    {
+        if (!lockFireAfterReload) return false;
+        if (Time.time >= nextFireTime) lockFireAfterReload = false;
+        return lockFireAfterReload;
+    }
+
+    bool TryReload()
+    {
         if (Input.GetKeyDown(KeyCode.R) && canReload && !isReloading && currentAmmo < magazineSize)
         {
-            UnfreezeAnim();
             StartCoroutine(Reload());
+            return true;
+        }
+        return false;
+    }
+
+    bool HandleEmptyFire()
+    {
+        if (currentAmmo > 0) return false;
+
+        if (Input.GetButtonDown("Fire1") || Input.GetButton("Fire1"))
+            StartCoroutine(Reload());
+
+        return true;
+    }
+
+    // ============================================================
+    // ===================== FIRE PROCESS ==========================
+    // ============================================================
+    void HandleFireProcess()
+    {
+        bool fireDown = Input.GetButtonDown("Fire1");
+        bool fireHeld = Input.GetButton("Fire1");
+
+        if (isReloading || requireReleaseFire)
+        {
+            if (!fireHeld) requireReleaseFire = false;
             return;
         }
 
-        if (requireReleaseFire && !Input.GetButton("Fire1"))
-            requireReleaseFire = false;
+        if (Time.time < nextFireTime) return;
 
-        if (isReloading || requireReleaseFire) return;
-
-        // HIP → AUTO
-        if (!isAiming && Input.GetButton("Fire1") && Time.time >= nextFireTime)
+        switch (fireMode)
         {
-            if (currentAmmo <= 0)
-            {
-                UnfreezeAnim();
-                StartCoroutine(Reload());
-                return;
-            }
-            Shoot();
-        }
+            case FireMode.Auto:
+                if (fireHeld) Shoot();
+                break;
 
-        // ADS → BURST
-        if (isAiming && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
-        {
-            if (currentAmmo <= 0)
-            {
-                UnfreezeAnim();
-                StartCoroutine(Reload());
-                return;
-            }
-
-            if (!isBurstFiring)
-                StartCoroutine(BurstFire());
+            case FireMode.Semi:
+                if (fireDown)
+                {
+                    Shoot();
+                    requireReleaseFire = true;
+                }
+                break;
         }
     }
 
-    IEnumerator BurstFire()
-    {
-        isBurstFiring = true;
-
-        int bulletsToFire = burstCount;
-        while (bulletsToFire > 0 && currentAmmo > 0)
-        {
-            Shoot();
-            bulletsToFire--;
-            yield return new WaitForSeconds(fireCooldown);
-        }
-
-        nextFireTime = Time.time + fireCooldown;
-        isBurstFiring = false;
-    }
-
+    // ============================================================
+    // ===================== SHOOT ================================
+    // ============================================================
     void Shoot()
     {
         nextFireTime = Time.time + fireCooldown;
         currentAmmo--;
 
-        MouseLook mouseLook = aimCamera.GetComponentInParent<MouseLook>();
-        if (mouseLook)
-        {
-            if (isAiming)
-                mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
-            else
-                mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
-        }
-
+        ApplyCameraRecoil();
         AddViewmodelRecoil();
 
         PlayAnim(viewModelAnimator, "Shoot");
         PlayAnim(fullBodyAnimator, "Shoot");
 
         muzzleFlashVM?.Play();
+        shootAudio?.PlayOneShot(shootClip);
 
-        Vector3 dir;
-        if (!isAiming)
-        {
-            Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-            dir = ApplySpread(ray.direction, hipSpread);
-        }
-        else
-        {
-            Ray camRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-            Vector3 targetPoint = Physics.Raycast(camRay, out RaycastHit hit, 1000f)
-                ? hit.point
-                : camRay.GetPoint(1000f);
-
-            dir = (targetPoint - firePointVM.position).normalized;
-        }
-
-        if (shootAudio && shootClip)
-            shootAudio.PlayOneShot(shootClip);
+        Vector3 dir = GetShootDirection();
 
         if (bulletPrefab)
         {
-            GameObject bullet = Instantiate(
-                bulletPrefab,
-                firePointVM.position,
-                Quaternion.LookRotation(dir)
-            );
-
-            Bullet b = bullet.GetComponent<Bullet>();
+            var obj = Instantiate(bulletPrefab, firePointVM.position, Quaternion.LookRotation(dir));
+            var b = obj.GetComponent<Bullet>();
             if (b)
             {
                 b.damage = damage;
@@ -296,154 +258,211 @@ public class Gun : MonoBehaviour
         }
     }
 
-    void AddViewmodelRecoil()
+    Vector3 GetShootDirection()
     {
-        if (!recoilPivot) return;
+        Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+        if (!isAiming) return ApplySpread(ray, hipSpread);
 
-        float recoil = isAiming ? adsRecoilAmount : hipRecoilAmount;
-        float back = isAiming ? adsRecoilBack : hipRecoilBack;
-
-        viewmodelRecoilTarget += new Vector3(
-            -recoil,
-            Random.Range(-1f, 1f),
-            back
-        );
+        return Physics.Raycast(ray, out RaycastHit hit, 1000f)
+            ? (hit.point - firePointVM.position).normalized
+            : (ray.GetPoint(1000f) - firePointVM.position).normalized;
     }
 
-    void HandleViewmodelRecoil()
+    // ============================================================
+    // ===================== ADS SYSTEM ===========================
+    // ============================================================
+    void HandleADSAll()
     {
-        viewmodelRecoilCurrent = Vector3.Lerp(
-            viewmodelRecoilCurrent,
-            viewmodelRecoilTarget,
-            Time.deltaTime * 25f
-        );
-
-        viewmodelRecoilTarget = Vector3.Lerp(
-            viewmodelRecoilTarget,
-            Vector3.zero,
-            Time.deltaTime * recoilReturnSpeed
-        );
-
-        if (recoilPivot)
-            recoilPivot.localRotation = Quaternion.Euler(viewmodelRecoilCurrent);
-    }
-
-    void HandleADS()
-    {
-        if (!hipPosition || !adsPosition || !ADS_Parent) return;
+        if (!ADS_Parent) return;
 
         Transform target = isAiming ? adsPosition : hipPosition;
 
         ADS_Parent.localPosition = Vector3.Lerp(
-            ADS_Parent.localPosition,
-            target.localPosition,
-            Time.deltaTime * aimSpeed
-        );
+            ADS_Parent.localPosition, target.localPosition, Time.deltaTime * aimSpeed);
 
         ADS_Parent.localRotation = Quaternion.Slerp(
-            ADS_Parent.localRotation,
-            target.localRotation,
-            Time.deltaTime * aimSpeed
-        );
-    }
-
-    void HandleADSZoom()
-    {
-        if (!aimCamera) return;
+            ADS_Parent.localRotation, target.localRotation, Time.deltaTime * aimSpeed);
 
         float targetFOV = isAiming ? adsFOV : hipFOV;
         aimCamera.fieldOfView = Mathf.Lerp(
-            aimCamera.fieldOfView,
-            targetFOV,
-            Time.deltaTime * fovLerpSpeed
-        );
+            aimCamera.fieldOfView, targetFOV, Time.deltaTime * fovLerpSpeed);
     }
 
-    Vector3 ApplySpread(Vector3 dir, float spread)
+    Vector3 ApplySpread(Ray ray, float spread)
     {
-        Vector2 circle = Random.insideUnitCircle * spread;
-        dir += aimCamera.transform.right * circle.x;
-        dir += aimCamera.transform.up * circle.y;
-        return dir.normalized;
+        Vector2 c = Random.insideUnitCircle * spread;
+        return (ray.direction + aimCamera.transform.right * c.x + aimCamera.transform.up * c.y).normalized;
     }
+
+    // ============================================================
+    // ===================== RECOIL ===============================
+    // ============================================================
+    void ApplyCameraRecoil()
+    {
+        var mouseLook = aimCamera.GetComponentInParent<MouseLook>();
+        if (!mouseLook) return;
+
+        if (isAiming) mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
+        else mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
+    }
+
+    void AddViewmodelRecoil()
+    {
+        float r = isAiming ? adsRecoilAmount : hipRecoilAmount;
+        float b = isAiming ? adsRecoilBack : hipRecoilBack;
+        vmRecoilTarget += new Vector3(-r, Random.Range(-1f, 1f), b);
+    }
+
+    void HandleViewmodelRecoil()
+    {
+        vmRecoilCur = Vector3.Lerp(vmRecoilCur, vmRecoilTarget, Time.deltaTime * 25f);
+        vmRecoilTarget = Vector3.Lerp(vmRecoilTarget, Vector3.zero, Time.deltaTime * recoilReturnSpeed);
+
+        recoilPivot.localRotation = Quaternion.Euler(vmRecoilCur + fireModeJiggleRotation);
+    }
+
+    IEnumerator FireModeJiggle()
+    {
+        Vector3 jig = new Vector3(Random.Range(-2f, 2f), Random.Range(-4f, 4f), 0f);
+        yield return LerpRot(Vector3.zero, jig, 10);
+        yield return LerpRot(jig, Vector3.zero, 8);
+        fireModeJiggleRotation = Vector3.zero;
+    }
+
+    IEnumerator LerpRot(Vector3 from, Vector3 to, float speed)
+    {
+        float t = 0;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * speed;
+            fireModeJiggleRotation = Vector3.Lerp(from, to, t);
+            yield return null;
+        }
+    }
+
+    // ============================================================
+    // ===================== RELOAD SYSTEM ========================
+    // ============================================================
     IEnumerator Reload()
     {
         if (isReloading || !canReload) yield break;
 
         isReloading = true;
         canReload = false;
+        forceHipByReload = true;
         requireReleaseFire = true;
 
-        // 1️⃣ ÉP HIP KHI RELOAD
-        forceHipByReload = true;
-        isAiming = false;
+        reloadElapsed = 0f;
+        ResetMagFlags();
 
-        if (viewModelAnimator)
-            viewModelAnimator.SetBool("isAiming", false);
-
-        if (crosshairUI)
-            crosshairUI.SetActive(true);
-
-        UnfreezeAnim();
         PlayAnim(viewModelAnimator, "Reload");
         PlayAnim(fullBodyAnimator, "Reload");
 
-        yield return new WaitForSeconds(reloadTime);
+        while (reloadElapsed < reloadTime)
+        {
+            reloadElapsed += Time.deltaTime;
+            ProcessMagReload(reloadElapsed / reloadTime);
+            yield return null;
+        }
 
-        // Nạp đạn
-        currentAmmo = magazineSize;
-        isReloading = false;
-
-        reloadAudio?.PlayOneShot(reloadClip);
-
-        // 2️⃣ SAU RELOAD: TRẢ QUYỀN ADS
-        forceHipByReload = false;
-
-        if (wantADS)
-            isAiming = true;
-        else
-            isAiming = false;
-
-        // 3️⃣ LOCK FIRE + COOLDOWN RELOAD
-        lockFireAfterReload = true;
-        nextFireTime = Time.time + postReloadDelay;
+        ProcessMagReload(1f);
+        FinishReload();
 
         yield return new WaitForSeconds(reloadCooldown);
         canReload = true;
     }
 
-    void UnfreezeAnim()
+    bool magDetached, magSpawned, magAttached;
+
+    void ResetMagFlags()
     {
-        if (!viewModelAnimator) return;
-        viewModelAnimator.speed = 1f;
+        magDetached = magSpawned = magAttached = false;
     }
 
+    void ProcessMagReload(float t)
+    {
+        if (!magDetached && t >= magDetachTime) { magDetached = true; DetachMag(); }
+        if (!magSpawned && t >= magSpawnTime) { magSpawned = true; SpawnMag(); }
+        if (!magAttached && t >= magAttachTime) { magAttached = true; AttachNewMag(); }
+    }
+
+    void DetachMag()
+    {
+        oldMagVM = currentMagVM;
+        oldMagFB = currentMagFB;
+
+        if (oldMagVM) AttachTo(oldMagVM.transform, leftHandMagHoldVM);
+        if (oldMagFB) AttachTo(oldMagFB.transform, leftHandMagHoldFB);
+    }
+
+    void SpawnMag()
+    {
+        Destroy(oldMagVM);
+        Destroy(oldMagFB);
+
+        int idx = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
+
+        currentMagVM = Instantiate(magLevelPrefabs[idx]);
+        currentMagFB = Instantiate(magLevelPrefabs[idx]);
+
+        AttachTo(currentMagVM.transform, leftHandMagHoldVM);
+        AttachTo(currentMagFB.transform, leftHandMagHoldFB);
+    }
+
+    void AttachNewMag()
+    {
+        if (currentMagVM) AttachTo(currentMagVM.transform, magSocketVM);
+        if (currentMagFB) AttachTo(currentMagFB.transform, magSocketFB);
+    }
+
+    void FinishReload()
+    {
+        currentAmmo = magazineSize;
+        isReloading = false;
+        forceHipByReload = false;
+
+        reloadAudio?.PlayOneShot(reloadClip);
+
+        lockFireAfterReload = true;
+        nextFireTime = Time.time + postReloadDelay;
+    }
+
+    void AttachTo(Transform obj, Transform parent)
+    {
+        if (!obj || !parent) return;
+        obj.SetParent(parent, false);
+        obj.localPosition = Vector3.zero;
+        obj.localRotation = Quaternion.identity;
+        obj.localScale = Vector3.one;
+    }
+
+    // ============================================================
+    // ===================== LEVEL SYSTEM =========================
+    // ============================================================
     void ApplyStatsByLevel()
     {
         int lv = level - 1;
-        damage = baseDamage * (1f + 0.2f * lv);
-        fireCooldown = baseFireCooldown * Mathf.Pow(0.9f, lv);
-        reloadTime = baseReloadTime * Mathf.Pow(0.9f, lv);
-        bulletSpeed = baseBulletSpeed * (1f + 0.15f * lv);
-        magazineSize = baseMagazineSize + lv * 5;
+        damage = gunData.damage * (1 + 0.2f * lv);
+        fireCooldown = gunData.fireRate * Mathf.Pow(0.9f, lv);
+        reloadTime = gunData.reloadTime * Mathf.Pow(0.9f, lv);
+        bulletSpeed = gunData.bulletSpeed * (1 + 0.15f * lv);
+        magazineSize = gunData.magazineSize + lv * 5;
         currentAmmo = magazineSize;
     }
 
     void UpdateGunVisual()
     {
-        int index = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
-        ReplaceModel(modelHolderVM, gunLevelModels[index]);
-        ReplaceModel(modelHolderFB, gunLevelModels[index]);
+        int i = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
+        ReplaceModel(modelHolderVM, gunLevelModels[i]);
+        ReplaceModel(modelHolderFB, gunLevelModels[i]);
 
-        var mesh = gunLevelModels[index].GetComponentInChildren<MeshRenderer>();
-        if (mesh)
-            currentBulletColor = mesh.sharedMaterial.color;
+        var mesh = gunLevelModels[i].GetComponentInChildren<MeshRenderer>();
+        if (mesh) currentBulletColor = mesh.sharedMaterial.color;
     }
 
     void ReplaceModel(Transform holder, GameObject prefab)
     {
-        foreach (Transform c in holder)
-            Destroy(c.gameObject);
+        foreach (Transform c in holder) Destroy(c.gameObject);
 
         var obj = Instantiate(prefab, holder);
         obj.transform.localPosition = Vector3.zero;
@@ -452,49 +471,24 @@ public class Gun : MonoBehaviour
 
     void AttachMagByLevel()
     {
-        int index = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
+        int i = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
 
-        if (currentMagVM) Destroy(currentMagVM);
-        if (currentMagFB) Destroy(currentMagFB);
+        currentMagVM = Instantiate(magLevelPrefabs[i], magSocketVM);
+        currentMagFB = Instantiate(magLevelPrefabs[i], magSocketFB);
 
-        if (magSocketVM)
-        {
-            currentMagVM = Instantiate(magLevelPrefabs[index], magSocketVM);
-            currentMagVM.transform.localPosition = Vector3.zero;
-            currentMagVM.transform.localRotation = Quaternion.identity;
-        }
-
-        if (magSocketFB)
-        {
-            currentMagFB = Instantiate(magLevelPrefabs[index], magSocketFB);
-            currentMagFB.transform.localPosition = Vector3.zero;
-            currentMagFB.transform.localRotation = Quaternion.identity;
-        }
+        AttachTo(currentMagVM.transform, magSocketVM);
+        AttachTo(currentMagFB.transform, magSocketFB);
     }
 
     void PlayAnim(Animator anim, string trigger)
     {
-        if (!anim || !anim.runtimeAnimatorController) return;
+        if (!anim) return;
         anim.ResetTrigger(trigger);
         anim.SetTrigger(trigger);
     }
 
-    void LevelUp()
-    {
-        if (level >= maxLevel) return;
-
-        level++;
-        currentExp = 0;
-
-        ApplyStatsByLevel();
-        UpdateGunVisual();
-        AttachMagByLevel();
-
-        LogStats();
-    }
-
     void LogStats()
     {
-        Debug.Log($"[GUN]\nLv {level}\nDMG: {damage}\nFireCooldown: {fireCooldown}\nReload: {reloadTime}\nMag: {magazineSize}");
+        Debug.Log($"[GUN] Lv {level} | DMG {damage} | FireCD {fireCooldown} | Reload {reloadTime} | Mag {magazineSize}");
     }
 }
