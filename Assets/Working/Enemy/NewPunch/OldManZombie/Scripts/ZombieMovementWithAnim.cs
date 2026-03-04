@@ -21,6 +21,9 @@ public class ZombieMovementWithAnim : MonoBehaviour
     [Header("Blood Effect")]
     public GameObject bloodEffectPrefab;
 
+    [Header("Zombie Type")]
+    public int zombieTypeIndex;
+    public ZombieData zombieData;
 
     private bool isDead = false;
     private bool isAttacking = false;
