@@ -170,7 +170,7 @@ public class SpawnZombieManager : MonoBehaviour
     {
         if (phase == 1)
         {
-            waveMessageUI?.ShowMessage("Zombie đang đến!");
+            waveMessageUI?.ShowMessage("A huge wave of zombie is approaching!");
             StartCoroutine(StartPhase2());
         }
         else
@@ -184,7 +184,7 @@ public class SpawnZombieManager : MonoBehaviour
     private IEnumerator StartPhase2()
     {
         yield return new WaitForSeconds(5f);
-        waveMessageUI?.ShowMessage("Zombie xuất hiện!");
+        waveMessageUI?.ShowMessage("Final wave!");
         phase = 2;
         StartCoroutine(StartWavePhase(spawnInterval * 0.5f));
     }
