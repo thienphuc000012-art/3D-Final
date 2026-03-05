@@ -12,6 +12,9 @@ public class ZombieUIManager : MonoBehaviour
     public TMP_Text statsText;
     public TMP_Text descriptionText;
     public Image zombieImage;
+    [Header("Background")]
+
+    public GameObject backgroundImage; // Image nền sau list panel
 
     [Header("Icon Prefab")]
     public GameObject zombieIconPrefab; 
@@ -35,18 +38,18 @@ public class ZombieUIManager : MonoBehaviour
     {
         bool isActive = !zombieListPanel.activeSelf;
         zombieListPanel.SetActive(isActive);
+        backgroundImage.SetActive(isActive); // bật/tắt background
 
         if (isActive)
         {
-          
-            Time.timeScale = 0f;
+            Time.timeScale = 0f; // pause game
         }
         else
         {
-        
-            Time.timeScale = 1f;
+            Time.timeScale = 1f; // resume game
         }
     }
+
 
 
     public void AddZombieIcon(ZombieData data)
@@ -90,7 +93,8 @@ public class ZombieUIManager : MonoBehaviour
     {
         zombieListPanel.SetActive(false);
         infoPanel.SetActive(false);
+        backgroundImage.SetActive(false); // tắt background
         Time.timeScale = 1f;
-
     }
+
 }
