@@ -2,50 +2,67 @@
 
 public class MouseLook : MonoBehaviour
 {
-    public Transform playerBody; // Kéo Player_T vào đây
-    public float sensitivity = 200f;
-    float xRotation = 0f;
-    bool isMouseLocked;
+    [Header("References")]
+    public Transform yawTransform;     // Player_T / Yaw
+    public Transform pitchTransform;   // Player_T / Yaw / Pitch
+    public Camera cam;                 // Main Camera
+
+    [Header("Settings")]
+    public float mouseSensitivity = 2f;
+
+    [Header("Vertical Clamp")]
+    public float minPitch = -45f;
+    public float maxPitch = 45f;
+
+    [Header("Horizontal Clamp")]
+    public float minYaw = -90f;
+    public float maxYaw = 90f;
+
+    float pitch;
+    float yaw;
 
     void Start()
     {
-        // Khóa chuột vào giữa màn hình
         Cursor.lockState = CursorLockMode.Locked;
-        // Ẩn con trỏ chuột đi
         Cursor.visible = false;
+
+        // Lưu góc ban đầu làm tâm
+        yaw = yawTransform.localEulerAngles.y;
+
+        // Fix trường hợp >180
+        if (yaw > 180f) yaw -= 360f;
     }
 
     void Update()
     {
-        float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        // 1. Xoay Lên/Xuống: Tác động vào chính CameraHolder (chứa Camera)
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        // ===== YAW =====
+        yaw += mouseX;
+        yaw = Mathf.Clamp(yaw, minYaw, maxYaw);
+        yawTransform.localRotation = Quaternion.Euler(0f, yaw, 0f);
 
-        // 2. Xoay Trái/Phải: Tác động vào Player_T
-        if (playerBody != null)
-        {
-            playerBody.Rotate(Vector3.up * mouseX);
-        }
+        // ===== PITCH =====
+        pitch -= mouseY;
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+        pitchTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
 
+        // ===== FIX ROLL =====
+        Vector3 camEuler = cam.transform.localEulerAngles;
+        camEuler.z = 0f;
+        cam.transform.localEulerAngles = camEuler;
+    }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            isMouseLocked = !isMouseLocked;
-        }
+    public void AddRecoil(float up, float side)
+    {
+        pitch -= up;
+        yaw += Random.Range(-side, side);
 
-        if(isMouseLocked)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+        yaw = Mathf.Clamp(yaw, minYaw, maxYaw);
+
+        yawTransform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+        pitchTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 }

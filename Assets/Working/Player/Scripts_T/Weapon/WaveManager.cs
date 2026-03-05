@@ -8,13 +8,9 @@ public class WaveManager : MonoBehaviour
     public int killsPerWave = 5;
     public int currentKills = 0;
 
-    public Gun playerGun;
-
     void Awake()
     {
         Instance = this;
-        if (playerGun == null)
-            playerGun = FindObjectOfType<Gun>();
     }
 
     public void OnEnemyKilled()
@@ -32,15 +28,13 @@ public class WaveManager : MonoBehaviour
         currentKills = 0;
         Debug.Log($"=== NEXT WAVE: {currentWave} ===");
 
-        if (playerGun != null)
-            playerGun.ApplyWaveUpgrade(currentWave);
+        // ❌ KHÔNG buff gun ở đây nữa
+        // Wave chỉ dùng để test / spawn / difficulty
     }
 
     public void ResetWaves()
     {
         currentWave = 1;
         currentKills = 0;
-        if (playerGun != null)
-            playerGun.ResetGunStats();
     }
 }
