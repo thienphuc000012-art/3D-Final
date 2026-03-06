@@ -98,6 +98,30 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0.51
       objectReference: {fileID: 0}
+    - target: {fileID: 4264020677182620610, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: zombieData
+      value: 
+      objectReference: {fileID: 11400000, guid: 778b3f0824580b244b8e185907e75e93, type: 2}
+    - target: {fileID: 4264020677182620610, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: bloodEffectPrefab
+      value: 
+      objectReference: {fileID: 6096811365080657661, guid: b8a1eacd588268f4781454e80087ec8f, type: 3}
+    - target: {fileID: 5181256458102696474, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: hitClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 7a2d9634472ce4c4e96cd9b3fde38c4f, type: 3}
+    - target: {fileID: 5181256458102696474, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: walkClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 7f7e8ba1fcfe6c842a9745c9d40c20e9, type: 3}
+    - target: {fileID: 5181256458102696474, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: deathClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 718436be7a84dc14089c5d1222026312, type: 3}
+    - target: {fileID: 5181256458102696474, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: attackClip
+      value: 
+      objectReference: {fileID: 8300000, guid: b7e483c72067d3d44b46de92e73b6452, type: 3}
     - target: {fileID: 5455164680093862577, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
       propertyPath: m_LocalPosition.x
       value: 8.36

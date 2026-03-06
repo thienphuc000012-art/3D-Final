@@ -48,6 +48,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5840066855573545303, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: attackClip
+      value: 
+      objectReference: {fileID: 8300000, guid: b7e483c72067d3d44b46de92e73b6452, type: 3}
     - target: {fileID: 5884509379456321799, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: m_Avatar
       value: 
@@ -81,8 +85,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: zombieData
+      value: 
+      objectReference: {fileID: 11400000, guid: c19e8adbad21bbb4698b80e86f2ffdb5, type: 2}
+    - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: startHealth
       value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 8461343357126832047, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: zombieTypeIndex
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8757696864070595596, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: m_LocalPosition.z

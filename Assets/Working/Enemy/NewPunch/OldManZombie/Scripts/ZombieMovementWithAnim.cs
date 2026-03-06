@@ -17,14 +17,24 @@ public class ZombieMovementWithAnim : MonoBehaviour
     private NavMeshAgent agent;
     private Health health;
 
+    private ZombieSoundManager soundManager;
+    [Header("Blood Effect")]
+    public GameObject bloodEffectPrefab;
+
+    [Header("Zombie Type")]
+    public int zombieTypeIndex;
+    public ZombieData zombieData;
+
     private bool isDead = false;
     private bool isAttacking = false;
 
+    public PlayerHealth sharedPlayerHealth;
     void Start()
     {
         animator = GetComponent<Animator>();
         agent = GetComponent<NavMeshAgent>();
         health = GetComponent<Health>();
+        soundManager = GetComponent<ZombieSoundManager>();
 
         if (health != null)
         {
@@ -48,6 +58,8 @@ public class ZombieMovementWithAnim : MonoBehaviour
             agent.updateRotation = true;
             agent.speed = moveSpeed;
         }
+        if (soundManager != null) soundManager.PlayWalk();
+
     }
 
     void Update()
@@ -75,16 +87,23 @@ public class ZombieMovementWithAnim : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage,  Vector3 hitPoint)
     {
         if (health != null && !isDead)
         {
             health.TakeDamage(damage);
+            if (bloodEffectPrefab != null)
+            {
+                GameObject blood = Instantiate(bloodEffectPrefab, hitPoint, Quaternion.identity);
+                Destroy(blood, 1f);
+            }
+
 
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
             if (!stateInfo.IsName("Hit"))
             {
                 animator.SetTrigger("Hit");
+                if (soundManager != null) soundManager.PlayHit();
             }
 
             if (health.GetCurrentHealth() <= 0)
@@ -99,12 +118,15 @@ public class ZombieMovementWithAnim : MonoBehaviour
         isAttacking = true;
         agent.isStopped = true;
         animator.SetTrigger("Attack");
+        if (soundManager != null) soundManager.PlayAttack();
 
-        Health playerHealth = target.GetComponent<Health>();
-        if (playerHealth != null)
+
+        //Health playerHealth = target.GetComponent<Health>();
+        if (sharedPlayerHealth != null)
         {
-            playerHealth.TakeDamage(10);
+            sharedPlayerHealth.TakeDamage(10); // ✅ tất cả zombie gọi chung PlayerHealth
         }
+
 
         StartCoroutine(ResetAttack());
     }
@@ -132,6 +154,8 @@ public class ZombieMovementWithAnim : MonoBehaviour
         }
 
         animator.SetTrigger("Die");
+        if (soundManager != null) soundManager.PlayDeath();
+
         Destroy(gameObject, 3f);
     }
 }

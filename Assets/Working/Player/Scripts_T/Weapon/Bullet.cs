@@ -45,7 +45,7 @@ public class Bullet : MonoBehaviour
     public void SetBulletSpeed(float newSpeed)
     {
         speed = newSpeed;
-        rb.linearVelocity = moveDir * speed;
+        rb.linearVelocity= moveDir * speed;
     }
 
     public void SetColor(Color color)
@@ -63,7 +63,8 @@ public class Bullet : MonoBehaviour
         ZombieHitbox hitbox = collision.collider.GetComponent<ZombieHitbox>();
         if (hitbox != null)
         {
-            hitbox.ApplyDamage((int)damage);
+            Vector3 hitPoint = collision.contacts[0].point; // ✅ lấy điểm va chạm
+            hitbox.ApplyDamage((int)damage, hitPoint);
         }
         else
         {
@@ -74,6 +75,7 @@ public class Bullet : MonoBehaviour
                 health.TakeDamage((int)damage);
             }
         }
+        Debug.Log("Bullet hit: " + collision.collider.name);
 
         Destroy(gameObject);
     }

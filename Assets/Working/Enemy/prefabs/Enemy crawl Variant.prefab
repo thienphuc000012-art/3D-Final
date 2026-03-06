@@ -28,6 +28,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0.51
       objectReference: {fileID: 0}
+    - target: {fileID: 4264020677182620610, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
+      propertyPath: bloodEffectPrefab
+      value: 
+      objectReference: {fileID: 6096811365080657661, guid: b8a1eacd588268f4781454e80087ec8f, type: 3}
     - target: {fileID: 5455164680093862577, guid: 22044fa6cfc196845ba24905272f1859, type: 3}
       propertyPath: m_LocalPosition.x
       value: 7.72

@@ -14669,6 +14669,7 @@ GameObject:
   - component: {fileID: 8615099944747659907}
   - component: {fileID: 4264020677182620610}
   - component: {fileID: -8660294935543302957}
+  - component: {fileID: 5181256458102696474}
   m_Layer: 0
   m_Name: Enemy walk
   m_TagString: Enemy
@@ -14755,6 +14756,10 @@ MonoBehaviour:
   moveSpeed: 0.5
   maxHealth: 50
   startHealth: 50
+  bloodEffectPrefab: {fileID: 6096811365080657661, guid: b8a1eacd588268f4781454e80087ec8f, type: 3}
+  zombieTypeIndex: 0
+  zombieData: {fileID: 11400000, guid: 7e2e821b882f1d14f91412d5c6fa984a, type: 2}
+  sharedPlayerHealth: {fileID: 0}
 --- !u!114 &-8660294935543302957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14767,6 +14772,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3e5380b299e5a428f08b3d1f94c7f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
+--- !u!114 &5181256458102696474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6634257854025271467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3951ba410d122194d86ed24f940bb582, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSoundManager
+  loopSource: {fileID: 0}
+  sfxSource: {fileID: 0}
+  walkClip: {fileID: 8300000, guid: 7f7e8ba1fcfe6c842a9745c9d40c20e9, type: 3}
+  attackClip: {fileID: 8300000, guid: b7e483c72067d3d44b46de92e73b6452, type: 3}
+  hitClip: {fileID: 8300000, guid: 7a2d9634472ce4c4e96cd9b3fde38c4f, type: 3}
+  deathClip: {fileID: 8300000, guid: 718436be7a84dc14089c5d1222026312, type: 3}
+  volume: 0.7
 --- !u!1 &6636391216150972202
 GameObject:
   m_ObjectHideFlags: 0
