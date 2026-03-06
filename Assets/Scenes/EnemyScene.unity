@@ -5639,7 +5639,7 @@ MonoBehaviour:
   - {fileID: 1311052050}
   - {fileID: 9081853}
   - {fileID: 2056884941}
-  spawnInterval: 1
+  spawnInterval: 2
   currentWave: 1
   zombiesPerWave: 5
   walkCount: 0

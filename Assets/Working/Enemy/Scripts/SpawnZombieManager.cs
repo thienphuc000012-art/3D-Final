@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+
 public class SpawnZombieManager : MonoBehaviour
 {
     [Header("Zombie Prefabs Walk/Run")]
@@ -40,14 +41,20 @@ public class SpawnZombieManager : MonoBehaviour
     private int healthBonus = 0;
 
     [Header("Player Settings")]
-    public PlayerHealth sharedPlayerHealth; 
+    public PlayerHealth sharedPlayerHealth;
 
     private int aliveZombies = 0;
-    private int phase = 1; 
+    private int phase = 1;
+
+    // quản lý số lượng spawn
+    private int zombiesToSpawnThisPhase;
+    private int zombiesSpawned;
+    private int zombiesPerPhase1; // số lượng zombie phase 1
 
     [Header("UI Settings")]
     public WaveMessageUI waveMessageUI;
     public ZombieUIManager zombieUIManager;
+
     void Start()
     {
         UpdateZombieCountByWave();
@@ -75,7 +82,19 @@ public class SpawnZombieManager : MonoBehaviour
     IEnumerator StartWavePhase(float interval)
     {
         spawning = true;
-        int zombiesToSpawn = zombiesPerWave;
+
+        int zombiesToSpawn;
+
+        // phase 1 lưu số lượng, phase 2 dùng lại
+        if (phase == 1)
+        {
+            zombiesToSpawn = zombiesPerWave;
+            zombiesPerPhase1 = zombiesToSpawn;
+        }
+        else
+        {
+            zombiesToSpawn = zombiesPerPhase1;
+        }
 
         Debug.Log("=== Bắt đầu Wave " + currentWave + " - Phase " + phase + " với " + zombiesToSpawn + " zombie ===");
 
@@ -117,6 +136,9 @@ public class SpawnZombieManager : MonoBehaviour
             spawnList.Add(prefab);
         }
 
+        zombiesToSpawnThisPhase = spawnList.Count;
+        zombiesSpawned = 0;
+
         List<int> usedLanes = new List<int>();
 
         foreach (GameObject prefab in spawnList)
@@ -143,19 +165,21 @@ public class SpawnZombieManager : MonoBehaviour
                 zm.startHealth += healthBonus;
                 zm.sharedPlayerHealth = sharedPlayerHealth;
 
-                // Khi zombie chết thì giảm aliveZombies
                 zm.GetComponent<Health>().OnDeath += () =>
                 {
                     aliveZombies--;
-                    if (aliveZombies <= 0) OnPhaseEnd();
+                    Debug.Log("Zombie chết, còn lại: " + aliveZombies);
+
+                    if (aliveZombies <= 0 && zombiesSpawned >= zombiesToSpawnThisPhase)
+                    {
+                        OnPhaseEnd();
+                    }
                 };
                 zombieUIManager.AddZombieIcon(zm.zombieData);
-
             }
 
             aliveZombies++;
-
-           // Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex + " offset Z: " + offset);
+            zombiesSpawned++;
 
             yield return new WaitForSeconds(interval);
 
@@ -164,6 +188,11 @@ public class SpawnZombieManager : MonoBehaviour
         }
 
         spawning = false;
+
+        if (aliveZombies <= 0)
+        {
+            OnPhaseEnd();
+        }
     }
 
     private void OnPhaseEnd()
@@ -171,7 +200,8 @@ public class SpawnZombieManager : MonoBehaviour
         if (phase == 1)
         {
             waveMessageUI?.ShowMessage("A huge wave of zombie is approaching!");
-            StartCoroutine(StartPhase2());
+            phase = 2;
+            StartCoroutine(StartPhase2Delay()); // gọi coroutine delay
         }
         else
         {
@@ -181,16 +211,21 @@ public class SpawnZombieManager : MonoBehaviour
         }
     }
 
-    private IEnumerator StartPhase2()
-    {
-        yield return new WaitForSeconds(5f);
-        waveMessageUI?.ShowMessage("Final wave!");
-        phase = 2;
-        StartCoroutine(StartWavePhase(spawnInterval * 0.5f));
-    }
-
     private void UpdateZombieCountByWave()
     {
-        zombiesPerWave = currentWave * 5; 
+        zombiesPerWave = currentWave * 5;
+    }
+    private IEnumerator StartPhase2Delay()
+    {
+        // đợi 3 giây cho chữ hiển thị
+        yield return new WaitForSeconds(3f);
+
+        waveMessageUI?.ShowMessage("Final wave!");
+
+        // đợi thêm 2 giây nữa cho chữ "Final wave!" hiển thị rõ
+        yield return new WaitForSeconds(2f);
+
+        // sau khi chữ đã hiển thị xong thì mới spawn zombie
+        StartCoroutine(StartWavePhase(spawnInterval * 0.5f));
     }
 }
