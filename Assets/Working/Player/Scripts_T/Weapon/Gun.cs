@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using Unity.Cinemachine;
 
 public class Gun : MonoBehaviour
 {
@@ -10,6 +9,9 @@ public class Gun : MonoBehaviour
     [Header("UI")]
     public GameObject crosshairUI;
 
+    [Header("Mouse Look")]
+    public MouseLook mouseLook;
+
     [Header("Audio")]
     public AudioSource shootAudio;
     public AudioSource reloadAudio;
@@ -18,7 +20,6 @@ public class Gun : MonoBehaviour
 
     [Header("Camera")]
     public Camera aimCamera;
-    public CinemachineCamera virtualCam;
 
     public float hipFOV = 60f;
     public float adsFOV = 45f;
@@ -117,10 +118,6 @@ public class Gun : MonoBehaviour
     {
         if (aimCamera == null)
             aimCamera = Camera.main;
-        if (virtualCam == null)
-        {
-            Debug.LogError("Cinemachine Camera not assigned!");
-        }
         CacheBaseStats();
         ResetGunToLevel1();
         UpdateGunVisual();
@@ -150,7 +147,6 @@ public class Gun : MonoBehaviour
         HandleADSAll();
         HandleViewmodelRecoil();
 
-        if (virtualCam == null) return;
         if (CheckFireLocked()) return;
         if (TryReload()) return;
         if (HandleEmptyFire()) return;
@@ -315,16 +311,11 @@ public class Gun : MonoBehaviour
 
         float targetFOV = isAiming ? adsFOV : hipFOV;
 
-        if (virtualCam != null)
-        {
-            float currentFOV = virtualCam.Lens.FieldOfView;
-
-            virtualCam.Lens.FieldOfView = Mathf.Lerp(
-                virtualCam.Lens.FieldOfView,
-                targetFOV,
-                Time.deltaTime * fovLerpSpeed
-            );
-        }
+        aimCamera.fieldOfView = Mathf.Lerp(
+            aimCamera.fieldOfView,
+            targetFOV,
+            Time.deltaTime * fovLerpSpeed
+        );
     }
     Vector3 ApplySpread(Ray ray, float spread)
     {
@@ -337,11 +328,12 @@ public class Gun : MonoBehaviour
     // ============================================================
     void ApplyCameraRecoil()
     {
-        var mouseLook = GetComponentInParent<MouseLook>();
-        if (!mouseLook) return;
+        if (mouseLook == null) return;
 
-        if (isAiming) mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
-        else mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
+        if (isAiming)
+            mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
+        else
+            mouseLook.AddRecoil(hipCamRecoilUp, hipCamRecoilSide);
     }
 
     void AddViewmodelRecoil()
@@ -482,7 +474,7 @@ public class Gun : MonoBehaviour
         int lv = level - 1;
 
         damage = gunData.damage * (1f + 0.5f * lv);
-        fireCooldown = gunData.fireRate * (1f - 0.15f * lv);
+        fireCooldown = Mathf.Max(0.05f, gunData.fireRate * (1f - 0.15f * lv));
         bulletSpeed = gunData.bulletSpeed * (1f + 0.1f * lv);
         magazineSize = gunData.magazineSize + lv *5;
 

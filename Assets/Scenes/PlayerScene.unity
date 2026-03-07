@@ -391,12 +391,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Gun
   gunData: {fileID: 11400000, guid: c9b889fa0432f844fb81494867b5643d, type: 2}
   crosshairUI: {fileID: 672865993}
+  mouseLook: {fileID: 659508920}
   shootAudio: {fileID: 539123792}
   reloadAudio: {fileID: 539123793}
   shootClip: {fileID: 8300000, guid: 3ce58b3d52fa24c418ab9143091c35a0, type: 3}
   reloadClip: {fileID: 8300000, guid: fd6becab66a70c442878f54ccd111250, type: 3}
   aimCamera: {fileID: 1497898492}
-  virtualCam: {fileID: 814670193}
   hipFOV: 70
   adsFOV: 35
   fovLerpSpeed: 10
@@ -434,10 +434,10 @@ MonoBehaviour:
   aimSpeed: 12
   hipPosition: {fileID: 1688788679}
   adsPosition: {fileID: 53450664}
-  hipCamRecoilUp: 1.2
-  hipCamRecoilSide: 0.6
-  adsCamRecoilUp: 0.15
-  adsCamRecoilSide: 0.1
+  hipCamRecoilUp: 2
+  hipCamRecoilSide: 1
+  adsCamRecoilUp: 1.5
+  adsCamRecoilSide: 0.75
   hipRecoilAmount: 4
   hipRecoilBack: 0.07
   adsRecoilAmount: 1.1

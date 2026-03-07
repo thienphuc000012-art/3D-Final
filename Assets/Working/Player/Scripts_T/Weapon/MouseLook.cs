@@ -26,10 +26,9 @@ public class MouseLook : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Lưu góc ban đầu làm tâm
         yaw = yawTransform.localEulerAngles.y;
+        pitch = pitchTransform.localEulerAngles.x;
 
-        // Fix trường hợp >180
         if (yaw > 180f) yaw -= 360f;
     }
 
