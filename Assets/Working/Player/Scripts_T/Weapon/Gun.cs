@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Unity.Cinemachine;
 
 public class Gun : MonoBehaviour
 {
@@ -17,7 +18,9 @@ public class Gun : MonoBehaviour
 
     [Header("Camera")]
     public Camera aimCamera;
-    public float hipFOV = 70f;
+    public CinemachineCamera virtualCam;
+
+    public float hipFOV = 60f;
     public float adsFOV = 45f;
     public float fovLerpSpeed = 10f;
 
@@ -112,6 +115,12 @@ public class Gun : MonoBehaviour
     // ===================== Start =====================
     void Start()
     {
+        if (aimCamera == null)
+            aimCamera = Camera.main;
+        if (virtualCam == null)
+        {
+            Debug.LogError("Cinemachine Camera not assigned!");
+        }
         CacheBaseStats();
         ResetGunToLevel1();
         UpdateGunVisual();
@@ -141,6 +150,7 @@ public class Gun : MonoBehaviour
         HandleADSAll();
         HandleViewmodelRecoil();
 
+        if (virtualCam == null) return;
         if (CheckFireLocked()) return;
         if (TryReload()) return;
         if (HandleEmptyFire()) return;
@@ -272,11 +282,16 @@ public class Gun : MonoBehaviour
     Vector3 GetShootDirection()
     {
         Ray ray = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-        if (!isAiming) return ApplySpread(ray, hipSpread);
 
-        return Physics.Raycast(ray, out RaycastHit hit, 1000f)
-            ? (hit.point - firePointVM.position).normalized
-            : (ray.GetPoint(1000f) - firePointVM.position).normalized;
+        float spread = isAiming ? adsSpread : hipSpread;
+
+        Vector2 c = Random.insideUnitCircle * spread;
+
+        Vector3 dir = ray.direction
+            + aimCamera.transform.right * c.x
+            + aimCamera.transform.up * c.y;
+
+        return dir.normalized;
     }
 
     // ============================================================
@@ -289,16 +304,28 @@ public class Gun : MonoBehaviour
         Transform target = isAiming ? adsPosition : hipPosition;
 
         ADS_Parent.localPosition = Vector3.Lerp(
-            ADS_Parent.localPosition, target.localPosition, Time.deltaTime * aimSpeed);
+            ADS_Parent.localPosition,
+            target.localPosition,
+            Time.deltaTime * aimSpeed);
 
         ADS_Parent.localRotation = Quaternion.Slerp(
-            ADS_Parent.localRotation, target.localRotation, Time.deltaTime * aimSpeed);
+            ADS_Parent.localRotation,
+            target.localRotation,
+            Time.deltaTime * aimSpeed);
 
         float targetFOV = isAiming ? adsFOV : hipFOV;
-        aimCamera.fieldOfView = Mathf.Lerp(
-            aimCamera.fieldOfView, targetFOV, Time.deltaTime * fovLerpSpeed);
-    }
 
+        if (virtualCam != null)
+        {
+            float currentFOV = virtualCam.Lens.FieldOfView;
+
+            virtualCam.Lens.FieldOfView = Mathf.Lerp(
+                virtualCam.Lens.FieldOfView,
+                targetFOV,
+                Time.deltaTime * fovLerpSpeed
+            );
+        }
+    }
     Vector3 ApplySpread(Ray ray, float spread)
     {
         Vector2 c = Random.insideUnitCircle * spread;
@@ -310,7 +337,7 @@ public class Gun : MonoBehaviour
     // ============================================================
     void ApplyCameraRecoil()
     {
-        var mouseLook = aimCamera.GetComponentInParent<MouseLook>();
+        var mouseLook = GetComponentInParent<MouseLook>();
         if (!mouseLook) return;
 
         if (isAiming) mouseLook.AddRecoil(adsCamRecoilUp, adsCamRecoilSide);
