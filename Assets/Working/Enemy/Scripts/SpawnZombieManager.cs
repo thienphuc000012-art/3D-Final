@@ -49,11 +49,14 @@ public class SpawnZombieManager : MonoBehaviour
     // quản lý số lượng spawn
     private int zombiesToSpawnThisPhase;
     private int zombiesSpawned;
-    private int zombiesPerPhase1; // số lượng zombie phase 1
+    private int zombiesPerPhase1;
 
     [Header("UI Settings")]
     public WaveMessageUI waveMessageUI;
     public ZombieUIManager zombieUIManager;
+
+    [Header("Wave UI")]
+    public WaveUIManager waveUIManager;
 
     void Start()
     {
@@ -85,11 +88,15 @@ public class SpawnZombieManager : MonoBehaviour
 
         int zombiesToSpawn;
 
-        // phase 1 lưu số lượng, phase 2 dùng lại
+
         if (phase == 1)
         {
             zombiesToSpawn = zombiesPerWave;
             zombiesPerPhase1 = zombiesToSpawn;
+            int totalZombiesInWave = zombiesPerPhase1 * 2;
+
+            waveUIManager.InitWave(currentWave, totalZombiesInWave);
+
         }
         else
         {
@@ -180,6 +187,8 @@ public class SpawnZombieManager : MonoBehaviour
 
             aliveZombies++;
             zombiesSpawned++;
+            waveUIManager.OnZombieSpawned();
+
 
             yield return new WaitForSeconds(interval);
 
@@ -201,7 +210,7 @@ public class SpawnZombieManager : MonoBehaviour
         {
             waveMessageUI?.ShowMessage("A huge wave of zombie is approaching!");
             phase = 2;
-            StartCoroutine(StartPhase2Delay()); // gọi coroutine delay
+            StartCoroutine(StartPhase2Delay()); 
         }
         else
         {
@@ -217,15 +226,13 @@ public class SpawnZombieManager : MonoBehaviour
     }
     private IEnumerator StartPhase2Delay()
     {
-        // đợi 3 giây cho chữ hiển thị
+
         yield return new WaitForSeconds(3f);
 
         waveMessageUI?.ShowMessage("Final wave!");
 
-        // đợi thêm 2 giây nữa cho chữ "Final wave!" hiển thị rõ
         yield return new WaitForSeconds(2f);
 
-        // sau khi chữ đã hiển thị xong thì mới spawn zombie
         StartCoroutine(StartWavePhase(spawnInterval * 0.5f));
     }
 }
