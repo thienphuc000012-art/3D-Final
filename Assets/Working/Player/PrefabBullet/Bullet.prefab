@@ -155,4 +155,5 @@ MonoBehaviour:
   speed: 60
   damage: 10
   lifeTime: 3
+  impactEffect: {fileID: 1454098668512166362, guid: 99833ed80e4c84e4fbd9bb6eb0453812, type: 3}
   bulletRenderer: {fileID: 2407448099257253909}

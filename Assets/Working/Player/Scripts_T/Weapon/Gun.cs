@@ -40,13 +40,17 @@ public class Gun : MonoBehaviour
     [Header("Bullet Visual")]
     public GameObject bulletPrefab;
 
-    [Header("Level Visual")]
-    public GameObject[] gunLevelModels;
+    [Header("Gun Level Visual")]
+    public GameObject[] gunLevelModelsVM;
+    public GameObject[] gunLevelModelsFB;
+
+    [Header("Mag System")]
+    public GameObject[] magLevelPrefabsVM;
+    public GameObject[] magLevelPrefabsFB;
 
     [Header("Mag System")]
     public Transform magSocketVM;
     public Transform magSocketFB;
-    public GameObject[] magLevelPrefabs;
 
     [Header("Mag Hand")]
     public Transform leftHandMagHoldVM;
@@ -430,10 +434,10 @@ public class Gun : MonoBehaviour
         Destroy(oldMagVM);
         Destroy(oldMagFB);
 
-        int idx = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
+        int idx = Mathf.Clamp(level - 1, 0, magLevelPrefabsVM.Length - 1);
 
-        currentMagVM = Instantiate(magLevelPrefabs[idx]);
-        currentMagFB = Instantiate(magLevelPrefabs[idx]);
+        currentMagVM = Instantiate(magLevelPrefabsVM[idx]);
+        currentMagFB = Instantiate(magLevelPrefabsFB[idx]);
 
         AttachTo(currentMagVM.transform, leftHandMagHoldVM);
         AttachTo(currentMagFB.transform, leftHandMagHoldFB);
@@ -483,11 +487,12 @@ public class Gun : MonoBehaviour
 
     void UpdateGunVisual()
     {
-        int i = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);
-        ReplaceModel(modelHolderVM, gunLevelModels[i]);
-        ReplaceModel(modelHolderFB, gunLevelModels[i]);
+        int i = Mathf.Clamp(level - 1, 0, gunLevelModelsVM.Length - 1);
 
-        var mesh = gunLevelModels[i].GetComponentInChildren<MeshRenderer>();
+        ReplaceModel(modelHolderVM, gunLevelModelsVM[i]);
+        ReplaceModel(modelHolderFB, gunLevelModelsFB[i]);
+
+        var mesh = gunLevelModelsVM[i].GetComponentInChildren<MeshRenderer>();
         if (mesh) currentBulletColor = mesh.sharedMaterial.color;
     }
 
@@ -502,13 +507,13 @@ public class Gun : MonoBehaviour
 
     void AttachMagByLevel()
     {
-        int i = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
+        int i = Mathf.Clamp(level - 1, 0, magLevelPrefabsVM.Length - 1);
 
         if (currentMagVM) Destroy(currentMagVM);
         if (currentMagFB) Destroy(currentMagFB);
 
-        currentMagVM = Instantiate(magLevelPrefabs[i]);
-        currentMagFB = Instantiate(magLevelPrefabs[i]);
+        currentMagVM = Instantiate(magLevelPrefabsVM[i]);
+        currentMagFB = Instantiate(magLevelPrefabsFB[i]);
 
         AttachTo(currentMagVM.transform, magSocketVM);
         AttachTo(currentMagFB.transform, magSocketFB);
