@@ -28,6 +28,9 @@ public class FirebaseConnect : MonoBehaviour
 
     // ================= UI BUTTON =================
 
+    public GameObject loginPanel;
+    public GameObject gamePanel;
+
     public async void OnSignUpButtonClick()
     {
         await SignUp();
@@ -36,6 +39,20 @@ public class FirebaseConnect : MonoBehaviour
     public async void OnSignInButtonClick()
     {
         await SignIn();
+    }
+
+    public void StartGameClick()
+    {
+        SceneManager.LoadScene("LoadScene");
+    }
+
+    public void ExitGameClick()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     // ================= CORE LOGIC =================
@@ -64,7 +81,12 @@ public class FirebaseConnect : MonoBehaviour
         await _firebase.CreateAccount(account);
 
         ShowMessage("Sign up success");
-        ClearInput();
+        //ClearInput();
+        GetInputField("InputPassword").text = "";
+
+        await Task.Delay(2000);
+
+        ShowMessage("");
     }
 
     private async Task SignIn()
@@ -97,7 +119,16 @@ public class FirebaseConnect : MonoBehaviour
         PlayerRuntime.Instance.Player.LoadFromData(snapshot.Object.Player);
 
         ShowMessage("Sign in successful");
-        SceneManager.LoadScene("GameScene");
+
+        await Task.Delay(1000);        
+
+        ShowMessage("");
+
+        loginPanel.SetActive(false);
+
+        gamePanel.SetActive(true);
+
+        //SceneManager.LoadScene("GameScene");
     }
 
 
@@ -106,6 +137,7 @@ public class FirebaseConnect : MonoBehaviour
     private string GetUsername()
     {
         return GameObject.Find("Canvas")
+            .transform.Find("LoginPanel")
             .transform.Find("InputUsername")
             .GetComponent<TMP_InputField>().text.Trim();
     }
@@ -113,6 +145,7 @@ public class FirebaseConnect : MonoBehaviour
     private string GetPassword()
     {
         return GameObject.Find("Canvas")
+            .transform.Find("LoginPanel")
             .transform.Find("InputPassword")
             .GetComponent<TMP_InputField>().text.Trim();
     }
@@ -126,6 +159,7 @@ public class FirebaseConnect : MonoBehaviour
     private TMP_InputField GetInputField(string name)
     {
         return GameObject.Find("Canvas")
+            .transform.Find("LoginPanel")
             .transform.Find(name)
             .GetComponent<TMP_InputField>();
     }
