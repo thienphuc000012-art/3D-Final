@@ -20,6 +20,8 @@ public class ZombieSoundManager : MonoBehaviour
             loopSource.playOnAwake = false;
             loopSource.loop = true;
             loopSource.spatialBlend = 1f;
+            AudioManager.Instance.RegisterZombieSource(loopSource);
+
         }
 
         if (sfxSource == null)
@@ -28,7 +30,14 @@ public class ZombieSoundManager : MonoBehaviour
             sfxSource.playOnAwake = false;
             sfxSource.loop = false;
             sfxSource.spatialBlend = 1f;
+            AudioManager.Instance.RegisterZombieSource(sfxSource);
+
         }
+    }
+    void OnDestroy()
+    {
+        if (loopSource != null) AudioManager.Instance.UnregisterZombieSource(loopSource);
+        if (sfxSource != null) AudioManager.Instance.UnregisterZombieSource(sfxSource);
     }
     void Update()
     {
