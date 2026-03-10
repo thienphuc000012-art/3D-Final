@@ -11,9 +11,7 @@ public class UpdateCanvas : MonoBehaviour
     int maxAmmo;
 
     float damage, fireCooldown, reloadTime, bulletSpeed;
-    public int magazineSize;
-
-    int level = 1;
+    int magazineSize, level;    
 
     [Header("Upgrade")]
     [SerializeField] TextMeshProUGUI curDamageText;
@@ -23,6 +21,8 @@ public class UpdateCanvas : MonoBehaviour
     [SerializeField] TextMeshProUGUI nextFireRateText;
     [SerializeField] TextMeshProUGUI nextMagazineText;
 
+
+    [SerializeField] GameObject UpgradePanel;
     void Awake()
     {
         player = GameObject.Find("Player_T");
@@ -36,18 +36,26 @@ public class UpdateCanvas : MonoBehaviour
     void Update()
     {
         UpdateGunStats();
+        CurGunStatsText();
+        NextGunStatsText();
         if (player != null)
         {
             currentAmmo = player.transform.Find("GunLogic").GetComponent<Gun>().currentAmmo;
             maxAmmo = player.transform.Find("GunLogic").GetComponent<Gun>().magazineSize;
         }
 
-        Ammotext.text = currentAmmo + "/" + maxAmmo;
+        Ammotext.text = currentAmmo + "/" + maxAmmo;    
+        
+        if(Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleUpgradePanel();
+        }
 
     }
 
     void UpdateGunStats()
     {
+        level = gunData.level;
         damage = gunData.damage;
         fireCooldown = gunData.fireRate;
         reloadTime = gunData.reloadTime;
@@ -65,22 +73,19 @@ public class UpdateCanvas : MonoBehaviour
     {
         int lv = level - 1;
 
-        damage = gunData.damage * (1f + 0.5f * lv);
-        fireCooldown = gunData.fireRate * (1f - 0.15f * lv);
-        bulletSpeed = gunData.bulletSpeed * (1f + 0.1f * lv);
-        magazineSize = gunData.magazineSize + lv * 5;
+        nextDamageText.text = (gunData.damage * (1f + 0.5f * lv)).ToString("F1");
+        nextFireRateText.text = (gunData.fireRate * (1f - 0.15f * lv)).ToString("F2") + "s";
+        nextMagazineText.text = (gunData.magazineSize + lv * 5).ToString();
 
-        currentAmmo = magazineSize;
+        
     }
+
+    public void ToggleUpgradePanel()
+    {
+        UpgradePanel.SetActive(!UpgradePanel.activeSelf);
+    }
+
 
         //_ = PlayerRuntime.Instance.SavePlayer();
 
-
-
-    //damage = gunData.damage;
-    //    fireCooldown = gunData.fireRate;
-    //    reloadTime = gunData.reloadTime;
-    //    bulletSpeed = gunData.bulletSpeed;
-    //    magazineSize = gunData.magazineSize;
-    //    currentAmmo = magazineSize;
-    }
+}
