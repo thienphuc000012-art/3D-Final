@@ -66,8 +66,8 @@ public class SpawnZombieManager : MonoBehaviour
     public AudioClip zombieComingClip;
 
     public AudioSource musicSource;
-    public AudioClip backgroundMusicClipPhase1; // nhạc cho phase 1
-    public AudioClip backgroundMusicClipPhase2; // nhạc cho phase 2
+    public AudioClip backgroundMusicClipPhase1; 
+    public AudioClip backgroundMusicClipPhase2; 
 
 
     void Start()
