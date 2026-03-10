@@ -58,6 +58,13 @@ public class SpawnZombieManager : MonoBehaviour
     [Header("Wave UI")]
     public WaveUIManager waveUIManager;
 
+    [Header("Audio Settings")]
+    public AudioSource audioSource;
+    public AudioClip zombieComingClip;
+
+    public AudioSource musicSource;          // dùng cho nhạc nền
+    public AudioClip backgroundMusicClip;
+
     void Start()
     {
         UpdateZombieCountByWave();
@@ -84,6 +91,17 @@ public class SpawnZombieManager : MonoBehaviour
 
     IEnumerator StartWavePhase(float interval)
     {
+        if (phase == 1 && audioSource != null && zombieComingClip != null)
+        {
+            audioSource.PlayOneShot(zombieComingClip);
+        }
+        if (phase == 1 && musicSource != null && backgroundMusicClip != null)
+        {
+            musicSource.clip = backgroundMusicClip;
+            musicSource.loop = true;   
+            musicSource.Play();
+        }
+
         spawning = true;
 
         int zombiesToSpawn;
@@ -217,6 +235,11 @@ public class SpawnZombieManager : MonoBehaviour
             waveEnded = true;
             phase = 1;
             waveMessageUI?.ShowMessage("=== Kết thúc Wave " + currentWave + " ===");
+            if (musicSource != null && musicSource.isPlaying)
+            {
+                musicSource.Stop();
+            }
+
         }
     }
 

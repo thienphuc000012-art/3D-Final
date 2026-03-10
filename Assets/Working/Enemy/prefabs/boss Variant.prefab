@@ -48,6 +48,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5695876079492745482, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
+      propertyPath: headshotParticles
+      value: 
+      objectReference: {fileID: 5024009746357069192, guid: ec3f674830402cc45bce805cf6493db7, type: 3}
     - target: {fileID: 5840066855573545303, guid: 5d6f30b8bff4f3843be9a19e53ee69c1, type: 3}
       propertyPath: attackClip
       value: 

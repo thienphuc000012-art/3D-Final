@@ -7,9 +7,12 @@ public class ZombieHitbox : MonoBehaviour
 
     private ZombieMovementWithAnim zombie;
 
+    [Header("Headshot Effects")]
+    public ParticleSystem headshotParticles;   // hiệu ứng particle
+
+
     void Start()
     {
-        // Lấy script zombie cha
         zombie = GetComponentInParent<ZombieMovementWithAnim>();
     }
 
@@ -22,10 +25,16 @@ public class ZombieHitbox : MonoBehaviour
         if (hitboxType == HitboxType.Head)
         {
             finalDamage = Mathf.RoundToInt(baseDamage * 2f); // headshot x2 damage
+
+  
+            if (headshotParticles != null)
+            {
+                ParticleSystem ps = Instantiate(headshotParticles, hitPoint, Quaternion.identity);
+                ps.Play();
+                Destroy(ps.gameObject, ps.main.duration);
+            }
         }
 
-        zombie.TakeDamage(finalDamage, hitPoint); // ✅ truyền hitPoint vào zombie
-       // Debug.Log($"{gameObject.name} nhận {finalDamage} damage ({hitboxType}) tại {hitPoint}");
+        zombie.TakeDamage(finalDamage, hitPoint);
     }
-
 }
