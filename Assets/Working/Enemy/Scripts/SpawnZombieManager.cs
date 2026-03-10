@@ -65,8 +65,10 @@ public class SpawnZombieManager : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip zombieComingClip;
 
-    public AudioSource musicSource;          
-    public AudioClip backgroundMusicClip;
+    public AudioSource musicSource;
+    public AudioClip backgroundMusicClipPhase1; // nhạc cho phase 1
+    public AudioClip backgroundMusicClipPhase2; // nhạc cho phase 2
+
 
     void Start()
     {
@@ -94,14 +96,23 @@ public class SpawnZombieManager : MonoBehaviour
 
     IEnumerator StartWavePhase(float interval)
     {
-        if (phase == 1 && audioSource != null && zombieComingClip != null)
+       if (phase == 1 && audioSource != null && zombieComingClip != null)
+    {
+        audioSource.PlayOneShot(zombieComingClip);
+    }
+
+
+
+        if (phase == 1 && musicSource != null && backgroundMusicClipPhase1 != null)
         {
-            audioSource.PlayOneShot(zombieComingClip);
+            musicSource.clip = backgroundMusicClipPhase1;
+            musicSource.loop = true;
+            musicSource.Play();
         }
-        if (phase == 1 && musicSource != null && backgroundMusicClip != null)
+        else if (phase == 2 && musicSource != null && backgroundMusicClipPhase2 != null)
         {
-            musicSource.clip = backgroundMusicClip;
-            musicSource.loop = true;   
+            musicSource.clip = backgroundMusicClipPhase2;
+            musicSource.loop = true;
             musicSource.Play();
         }
 
@@ -231,6 +242,11 @@ public class SpawnZombieManager : MonoBehaviour
         {
             waveMessageUI?.ShowMessage("A huge wave of zombie is approaching!");
             phase = 2;
+            if (audioSource != null && zombieComingClip != null)
+            {
+                audioSource.PlayOneShot(zombieComingClip);
+            }
+
             StartCoroutine(StartPhase2Delay()); 
         }
         else
