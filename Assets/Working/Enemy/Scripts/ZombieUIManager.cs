@@ -17,7 +17,11 @@ public class ZombieUIManager : MonoBehaviour
     public GameObject backgroundImage; 
 
     [Header("Icon Prefab")]
-    public GameObject zombieIconPrefab; 
+    public GameObject zombieIconPrefab;
+
+    [Header("Other UI")]
+    public AudioSettingsUI audioSettingsUI;
+    public GameObject audioSettingsButton;
 
     private List<GameObject> spawnedIcons = new List<GameObject>();
 
@@ -42,10 +46,19 @@ public class ZombieUIManager : MonoBehaviour
 
         if (isActive)
         {
+            if (audioSettingsUI != null)
+                audioSettingsUI.ExitSettings();
+            if (audioSettingsButton != null)
+                audioSettingsButton.SetActive(false);
+
+
             Time.timeScale = 0f; 
         }
         else
         {
+            if (audioSettingsButton != null)
+                audioSettingsButton.SetActive(true);
+
             Time.timeScale = 1f; 
         }
     }
@@ -94,6 +107,9 @@ public class ZombieUIManager : MonoBehaviour
         zombieListPanel.SetActive(false);
         infoPanel.SetActive(false);
         backgroundImage.SetActive(false);
+        if (audioSettingsButton != null)
+            audioSettingsButton.SetActive(true);
+
         Time.timeScale = 1f;
     }
 
