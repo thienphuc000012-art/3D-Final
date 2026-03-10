@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: SciFi_Rifle
   m_EditorClassIdentifier: Assembly-CSharp::GunData
   gunName: GunLight
+  level: 1
   damage: 10
   fireRate: 0.1
   reloadTime: 1.5
