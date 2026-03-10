@@ -4,6 +4,7 @@
 public class GunData : ScriptableObject
 {
     public string gunName;
+    public int level;
 
     public float damage = 10f;
     public float fireRate = 0.1f;

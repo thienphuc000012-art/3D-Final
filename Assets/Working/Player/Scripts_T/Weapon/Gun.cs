@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Unity.Cinemachine;
 
 public class Gun : MonoBehaviour
 {
@@ -81,7 +82,7 @@ public class Gun : MonoBehaviour
     public int expToNextLevel = 10;
 
     // ===================== Runtime =====================
-    int currentAmmo;
+    public int currentAmmo;
     float nextFireTime;
     bool isReloading;
     bool requireReleaseFire;
@@ -90,7 +91,7 @@ public class Gun : MonoBehaviour
     bool canReload = true;
 
     float damage, fireCooldown, reloadTime, bulletSpeed;
-    int magazineSize;
+    public int magazineSize;
 
     Color currentBulletColor = Color.white;
     Vector3 vmRecoilCur, vmRecoilTarget;
@@ -116,7 +117,6 @@ public class Gun : MonoBehaviour
         ResetGunToLevel1();
         UpdateGunVisual();
         AttachMagByLevel();
-        LogStats();
     }
 
     void CacheBaseStats()
@@ -145,7 +145,19 @@ public class Gun : MonoBehaviour
         if (CheckFireLocked()) return;
         if (TryReload()) return;
         if (HandleEmptyFire()) return;
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            if (level < maxLevel)
+            {
+                level++;
 
+                ApplyStatsByLevel();
+                UpdateGunVisual();
+                AttachMagByLevel();
+
+                DebugLevelUp();
+            }
+        }
         HandleFireProcess();
     }
 
@@ -442,11 +454,12 @@ public class Gun : MonoBehaviour
     void ApplyStatsByLevel()
     {
         int lv = level - 1;
-        damage = gunData.damage * (1 + 0.2f * lv);
-        fireCooldown = gunData.fireRate * Mathf.Pow(0.9f, lv);
-        reloadTime = gunData.reloadTime * Mathf.Pow(0.9f, lv);
-        bulletSpeed = gunData.bulletSpeed * (1 + 0.15f * lv);
-        magazineSize = gunData.magazineSize + lv * 5;
+
+        damage = gunData.damage * (1f + 0.5f * lv);
+        fireCooldown = gunData.fireRate * (1f - 0.15f * lv);
+        bulletSpeed = gunData.bulletSpeed * (1f + 0.1f * lv);
+        magazineSize = gunData.magazineSize + lv *5;
+
         currentAmmo = magazineSize;
     }
 
@@ -473,8 +486,11 @@ public class Gun : MonoBehaviour
     {
         int i = Mathf.Clamp(level - 1, 0, magLevelPrefabs.Length - 1);
 
-        currentMagVM = Instantiate(magLevelPrefabs[i], magSocketVM);
-        currentMagFB = Instantiate(magLevelPrefabs[i], magSocketFB);
+        if (currentMagVM) Destroy(currentMagVM);
+        if (currentMagFB) Destroy(currentMagFB);
+
+        currentMagVM = Instantiate(magLevelPrefabs[i]);
+        currentMagFB = Instantiate(magLevelPrefabs[i]);
 
         AttachTo(currentMagVM.transform, magSocketVM);
         AttachTo(currentMagFB.transform, magSocketFB);
@@ -487,8 +503,16 @@ public class Gun : MonoBehaviour
         anim.SetTrigger(trigger);
     }
 
-    void LogStats()
+    void DebugLevelUp()
     {
-        Debug.Log($"[GUN] Lv {level} | DMG {damage} | FireCD {fireCooldown} | Reload {reloadTime} | Mag {magazineSize}");
+        Debug.Log(
+            $"<color=yellow>GUN LEVEL UP!</color>\n" +
+            $"Level: <color=cyan>{level}</color>\n" +
+            $"Damage: {damage}\n" +
+            $"Fire Rate: {fireCooldown}\n" +
+            $"Reload Time: {reloadTime}\n" +
+            $"Bullet Speed: {bulletSpeed}\n" +
+            $"Magazine Size: {magazineSize}"
+        );
     }
 }
