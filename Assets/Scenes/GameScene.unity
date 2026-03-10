@@ -661,6 +661,8 @@ MonoBehaviour:
   currentHealth: 0
   healthSlider: {fileID: 0}
   healthBarImage: {fileID: 1989089814}
+  gameOverPanel: {fileID: 0}
+  musicSource: {fileID: 0}
 --- !u!4 &42257869
 Transform:
   m_ObjectHideFlags: 0
@@ -10200,7 +10202,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &699015073
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16565,6 +16567,7 @@ MonoBehaviour:
   waveMessageUI: {fileID: 717297929}
   zombieUIManager: {fileID: 1433998684}
   waveUIManager: {fileID: 51314234}
+  nextWavePanel: {fileID: 0}
   audioSource: {fileID: 1282064405}
   zombieComingClip: {fileID: 8300000, guid: 4ece9500b8367a440a4cda0b7e2bba26, type: 3}
   musicSource: {fileID: 1282064405}
