@@ -58,11 +58,14 @@ public class SpawnZombieManager : MonoBehaviour
     [Header("Wave UI")]
     public WaveUIManager waveUIManager;
 
+    [Header("Wave Control UI")]
+    public GameObject nextWavePanel; 
+
     [Header("Audio Settings")]
     public AudioSource audioSource;
     public AudioClip zombieComingClip;
 
-    public AudioSource musicSource;          // dùng cho nhạc nền
+    public AudioSource musicSource;          
     public AudioClip backgroundMusicClip;
 
     void Start()
@@ -71,22 +74,22 @@ public class SpawnZombieManager : MonoBehaviour
         StartCoroutine(StartWavePhase(spawnInterval));
     }
 
-    void Update()
+    public void StartNextWave()
     {
-        if (waveEnded && Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (nextWavePanel != null)
+            nextWavePanel.SetActive(false);
+
+        waveEnded = false;
+        currentWave++;
+        UpdateZombieCountByWave();
+
+        if (currentWave % 5 == 0)
         {
-            waveEnded = false;
-            currentWave++;
-            UpdateZombieCountByWave();
-
-            if (currentWave % 5 == 0)
-            {
-                healthBonus += 100;
-                Debug.Log("Tăng máu cho tất cả enemy thêm 100. Tổng bonus: " + healthBonus);
-            }
-
-            StartCoroutine(StartWavePhase(spawnInterval));
+            healthBonus += 100;
+            Debug.Log("Tăng máu cho tất cả enemy thêm 100. Tổng bonus: " + healthBonus);
         }
+
+        StartCoroutine(StartWavePhase(spawnInterval));
     }
 
     IEnumerator StartWavePhase(float interval)
@@ -239,6 +242,9 @@ public class SpawnZombieManager : MonoBehaviour
             {
                 musicSource.Stop();
             }
+            if (nextWavePanel != null)
+                nextWavePanel.SetActive(true);
+
 
         }
     }
