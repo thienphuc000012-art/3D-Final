@@ -82,7 +82,7 @@ public class Gun : MonoBehaviour
     public int expToNextLevel = 10;
 
     // ===================== Runtime =====================
-    int currentAmmo;
+    public int currentAmmo;
     float nextFireTime;
     bool isReloading;
     bool requireReleaseFire;
@@ -91,7 +91,7 @@ public class Gun : MonoBehaviour
     bool canReload = true;
 
     float damage, fireCooldown, reloadTime, bulletSpeed;
-    int magazineSize;
+    public int magazineSize;
 
     Color currentBulletColor = Color.white;
     Vector3 vmRecoilCur, vmRecoilTarget;
