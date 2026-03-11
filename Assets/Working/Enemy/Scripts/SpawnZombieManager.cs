@@ -67,7 +67,17 @@ public class SpawnZombieManager : MonoBehaviour
 
     public AudioSource musicSource;
     public AudioClip backgroundMusicClipPhase1; 
-    public AudioClip backgroundMusicClipPhase2; 
+    public AudioClip backgroundMusicClipPhase2;
+
+    
+    
+    
+    //-----------------------------------
+    private void Awake()
+    {
+        currentWave = PlayerRuntime.Instance.Player.Wave;
+    }
+    //-----------------------------------
 
 
     void Start()
@@ -75,6 +85,14 @@ public class SpawnZombieManager : MonoBehaviour
         UpdateZombieCountByWave();
         StartCoroutine(StartWavePhase(spawnInterval));
     }
+
+
+    //-----------------------------------
+    void Update()
+    {
+        PlayerRuntime.Instance.Player.Wave = currentWave;
+    }
+    //-----------------------------------
 
     public void StartNextWave()
     {

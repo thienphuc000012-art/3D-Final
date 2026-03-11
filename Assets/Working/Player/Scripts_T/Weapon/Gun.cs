@@ -5,6 +5,7 @@ using Unity.Cinemachine;
 public class Gun : MonoBehaviour
 {
     // ===================== Inspector Data =====================
+    public MouseLook mouseLook;
     public GunData gunData;
 
     [Header("UI")]
@@ -131,13 +132,17 @@ public class Gun : MonoBehaviour
 
     void ResetGunToLevel1()
     {
-        level = 1;
+        level = PlayerRuntime.Instance.Player.Gun.level < 2 ? 1 : PlayerRuntime.Instance.Player.Gun.level;
         ApplyStatsByLevel();
+        UpdateGunVisual();
     }
 
     // ===================== Update =====================
     void Update()
     {
+        if (mouseLook != null && !mouseLook.IsCursorLocked())
+            return;
+
         HandleInput();
         HandleADSAll();
         HandleViewmodelRecoil();
@@ -145,20 +150,24 @@ public class Gun : MonoBehaviour
         if (CheckFireLocked()) return;
         if (TryReload()) return;
         if (HandleEmptyFire()) return;
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            if (level < maxLevel)
-            {
-                level++;
-
-                ApplyStatsByLevel();
-                UpdateGunVisual();
-                AttachMagByLevel();
-
-                DebugLevelUp();
-            }
-        }
+                    
+        
         HandleFireProcess();
+    }
+
+    public void UpgradeGun()
+    {
+        if (level < maxLevel)
+        {
+            level++;
+
+            ApplyStatsByLevel();
+            UpdateGunVisual();
+            AttachMagByLevel();
+
+            //DebugLevelUp();
+            gunData.level = level;
+        }
     }
 
     // ============================================================
@@ -455,14 +464,23 @@ public class Gun : MonoBehaviour
     {
         int lv = level - 1;
 
-        damage = gunData.damage * (1f + 0.5f * lv);
-        fireCooldown = gunData.fireRate * (1f - 0.15f * lv);
-        bulletSpeed = gunData.bulletSpeed * (1f + 0.1f * lv);
-        magazineSize = gunData.magazineSize + lv *5;
+        gunData.damage = gunData.damage * (1f + 0.5f * lv);        
+        gunData.bulletSpeed = gunData.bulletSpeed * (1f + 0.1f * lv);
+        gunData.magazineSize = gunData.magazineSize + lv *5;
 
+        fireCooldown = gunData.fireRate * (1f - 0.15f * lv);
+
+        UpdateGunData();
         currentAmmo = magazineSize;
     }
 
+    void UpdateGunData()
+    {
+        damage = gunData.damage;        
+        reloadTime = gunData.reloadTime;
+        bulletSpeed = gunData.bulletSpeed;
+        magazineSize = gunData.magazineSize;
+    }
     void UpdateGunVisual()
     {
         int i = Mathf.Clamp(level - 1, 0, gunLevelModels.Length - 1);

@@ -3,9 +3,9 @@
 public class MouseLook : MonoBehaviour
 {
     [Header("References")]
-    public Transform yawTransform;     // Player_T / Yaw
-    public Transform pitchTransform;   // Player_T / Yaw / Pitch
-    public Camera cam;                 // Main Camera
+    public Transform yawTransform;
+    public Transform pitchTransform;
+    public Camera cam;
 
     [Header("Settings")]
     public float mouseSensitivity = 2f;
@@ -21,20 +21,30 @@ public class MouseLook : MonoBehaviour
     float pitch;
     float yaw;
 
+    bool isCursorLocked = true;
+
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        LockCursor(true);
 
-        // Lưu góc ban đầu làm tâm
         yaw = yawTransform.localEulerAngles.y;
 
-        // Fix trường hợp >180
-        if (yaw > 180f) yaw -= 360f;
+        if (yaw > 180f)
+            yaw -= 360f;
     }
 
     void Update()
     {
+        // ===== TOGGLE CURSOR =====
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            LockCursor(!isCursorLocked);
+        }
+
+        // Nếu chuột đang mở thì không xoay camera
+        if (!isCursorLocked)
+            return;
+
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
@@ -54,6 +64,22 @@ public class MouseLook : MonoBehaviour
         cam.transform.localEulerAngles = camEuler;
     }
 
+    public void LockCursor(bool state)
+    {
+        isCursorLocked = state;
+
+        if (state)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+    }
+
     public void AddRecoil(float up, float side)
     {
         pitch -= up;
@@ -64,5 +90,11 @@ public class MouseLook : MonoBehaviour
 
         yawTransform.localRotation = Quaternion.Euler(0f, yaw, 0f);
         pitchTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+    }
+
+
+    public bool IsCursorLocked()
+    {
+        return isCursorLocked;
     }
 }
