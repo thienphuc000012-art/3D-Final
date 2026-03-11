@@ -102,7 +102,7 @@ public class ZombieUIManager : MonoBehaviour
     {
         infoPanel.SetActive(true);
         nameText.text = data.zombieName;
-        statsText.text = $"Máu: {data.maxHealth}\nTốc độ: {data.moveSpeed}\nSát thương: {data.damage}";
+        statsText.text = $"Hp: {data.maxHealth}\nSpeed: {data.moveSpeed}\nDamage: {data.damage}";
         descriptionText.text = data.description;
         zombieImage.sprite = data.zombieSprite;
     }

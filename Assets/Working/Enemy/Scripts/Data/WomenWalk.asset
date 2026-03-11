@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2a8987e8c72074c9694c230fcac270, type: 3}
   m_Name: WomenWalk
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  zombieName: phu nu di bo
+  zombieName: Ladygaga
   zombieSprite: {fileID: 21300000, guid: 855e9d12ef5fbab4cab9ef8202bcf716, type: 3}
   maxHealth: 40
   moveSpeed: 3
   damage: 2
-  description: vvvv
+  description: A fast and aggressive infected woman that strikes quickly and relentlessly.

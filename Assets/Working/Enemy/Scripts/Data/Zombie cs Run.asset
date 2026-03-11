@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2a8987e8c72074c9694c230fcac270, type: 3}
   m_Name: Zombie cs Run
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  zombieName: cs chay
+  zombieName: Running Man
   zombieSprite: {fileID: 21300000, guid: 84300034190a31c47944f6340b35628e, type: 3}
   maxHealth: 49
   moveSpeed: 2
   damage: 3
-  description: ccc
+  description: A furious infected man that sprints toward victims with uncontrollable
+    rage.

@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2a8987e8c72074c9694c230fcac270, type: 3}
   m_Name: Boss1
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  zombieName: boss 1
+  zombieName: Thursday
   zombieSprite: {fileID: 21300000, guid: e71a4e38338ea5a4eb834b755e5d69c0, type: 3}
   maxHealth: 50
   moveSpeed: 2
   damage: 10
-  description: aaa
+  description: A massive mutated zombie with brutal strength and slow but devastating
+    attacks.
