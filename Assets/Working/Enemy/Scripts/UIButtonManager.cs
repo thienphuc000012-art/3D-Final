@@ -18,7 +18,8 @@ public class UIButtonManager : MonoBehaviour
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Login"); 
+        PlayerRuntime.Instance.sceneIndex = 0;
+        SceneManager.LoadScene("LoadScene"); 
     }
 
     public void ExitGame()

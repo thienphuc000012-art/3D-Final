@@ -26,10 +26,7 @@ public class FirebaseConnect : MonoBehaviour
         _firebase = new FirebaseService(firebaseUrl);
     }
 
-    // ================= UI BUTTON =================
-
-    public GameObject loginPanel;
-    public GameObject gamePanel;
+    // ================= UI BUTTON =================    
 
     public async void OnSignUpButtonClick()
     {
@@ -43,6 +40,7 @@ public class FirebaseConnect : MonoBehaviour
 
     public void StartGameClick()
     {
+        PlayerRuntime.Instance.sceneIndex = 1;
         SceneManager.LoadScene("LoadScene");
     }
 
@@ -123,12 +121,8 @@ public class FirebaseConnect : MonoBehaviour
         await Task.Delay(1000);        
 
         ShowMessage("");
-
-        loginPanel.SetActive(false);
-
-        gamePanel.SetActive(true);
-
-        //SceneManager.LoadScene("GameScene");
+       
+        SceneManager.LoadScene("Menu");
     }
 
 
