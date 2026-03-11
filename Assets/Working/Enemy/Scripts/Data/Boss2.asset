@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2a8987e8c72074c9694c230fcac270, type: 3}
   m_Name: Boss2
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  zombieName: boss2
+  zombieName: Sunday
   zombieSprite: {fileID: 21300000, guid: d9dcbdf5ec0bfad4790466a0d7f1b001, type: 3}
   maxHealth: 51
   moveSpeed: 3
   damage: 4
-  description: bbb
+  description: A heavily built boss that absorbs huge damage and crushes anything
+    in its path.

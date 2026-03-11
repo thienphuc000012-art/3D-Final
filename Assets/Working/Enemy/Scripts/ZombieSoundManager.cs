@@ -12,8 +12,6 @@ public class ZombieSoundManager : MonoBehaviour
     public AudioClip hitClip;
     public AudioClip deathClip;
 
-    [Range(0f, 1f)] public float volume = 0.7f;
-
     void Awake()
     {
         if (loopSource == null)
@@ -22,6 +20,8 @@ public class ZombieSoundManager : MonoBehaviour
             loopSource.playOnAwake = false;
             loopSource.loop = true;
             loopSource.spatialBlend = 1f;
+            AudioManager.Instance.RegisterZombieSource(loopSource);
+
         }
 
         if (sfxSource == null)
@@ -30,7 +30,22 @@ public class ZombieSoundManager : MonoBehaviour
             sfxSource.playOnAwake = false;
             sfxSource.loop = false;
             sfxSource.spatialBlend = 1f;
+            AudioManager.Instance.RegisterZombieSource(sfxSource);
+
         }
+    }
+    void OnDestroy()
+    {
+        if (loopSource != null) AudioManager.Instance.UnregisterZombieSource(loopSource);
+        if (sfxSource != null) AudioManager.Instance.UnregisterZombieSource(sfxSource);
+    }
+    void Update()
+    {
+        if (loopSource != null)
+            loopSource.volume = AudioManager.Instance.zombieVolume;
+
+        if (sfxSource != null)
+            sfxSource.volume = AudioManager.Instance.zombieVolume;
     }
 
     public void PlayWalk()
@@ -38,7 +53,7 @@ public class ZombieSoundManager : MonoBehaviour
         if (walkClip != null)
         {
             loopSource.clip = walkClip;
-            loopSource.volume = volume;
+            loopSource.volume = AudioManager.Instance.zombieVolume;
             loopSource.Play();
         }
     }
@@ -51,25 +66,22 @@ public class ZombieSoundManager : MonoBehaviour
     public void PlayAttack()
     {
         StopWalk();
-
         if (attackClip != null)
-            sfxSource.PlayOneShot(attackClip, volume);
+            sfxSource.PlayOneShot(attackClip, AudioManager.Instance.zombieVolume);
     }
 
     public void PlayHit()
     {
         StopWalk();
-
         if (hitClip != null)
-            sfxSource.PlayOneShot(hitClip, volume);
+            sfxSource.PlayOneShot(hitClip, AudioManager.Instance.zombieVolume);
     }
 
     public void PlayDeath()
     {
         StopWalk();
         sfxSource.Stop(); 
-
         if (deathClip != null)
-            sfxSource.PlayOneShot(deathClip, volume);
+            sfxSource.PlayOneShot(deathClip, AudioManager.Instance.zombieVolume);
     }
 }

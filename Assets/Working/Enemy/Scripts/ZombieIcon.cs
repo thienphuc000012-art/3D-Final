@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Net.Http.Headers;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class ZombieIcon : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
@@ -14,5 +15,5 @@ public class ZombieIcon : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public void OnPointerExit(PointerEventData eventData)
     {
         uiManager.HideZombieInfo();
-    }
+    }    
 }

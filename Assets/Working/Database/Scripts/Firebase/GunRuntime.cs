@@ -4,6 +4,7 @@ using UnityEngine;
 public class GunRuntime
 {
     public string gunName;
+    public int level;
 
     public float damage;
     public float fireRate;
@@ -18,6 +19,7 @@ public class GunRuntime
         return new GunRuntime
         {
             gunName = data.gunName,
+            level = data.level,
             damage = data.damage,
             fireRate = data.fireRate,
             reloadTime = data.reloadTime,

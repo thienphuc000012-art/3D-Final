@@ -146,6 +146,8 @@ public class ZombieMovementWithAnim : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
+        PlayerRuntime.Instance.Player.Exp += 100;
+
         Debug.Log(gameObject.name + " đã chết!");
 
         if (agent != null)

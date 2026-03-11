@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2a8987e8c72074c9694c230fcac270, type: 3}
   m_Name: ZombieWalk
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  zombieName: og gia di bo
+  zombieName: Walking Dead
   zombieSprite: {fileID: 21300000, guid: ae4ff043d41e5b94d9db0a31bb1c4158, type: 3}
   maxHealth: 40
   moveSpeed: 3
   damage: 2
-  description: xxxx
+  description: A slow, decaying zombie that relentlessly shambles toward its prey.

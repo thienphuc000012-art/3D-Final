@@ -13,8 +13,15 @@ public class ZombieUIManager : MonoBehaviour
     public TMP_Text descriptionText;
     public Image zombieImage;
 
+    [Header("Background")]
+    public GameObject backgroundImage; 
+
     [Header("Icon Prefab")]
-    public GameObject zombieIconPrefab; 
+    public GameObject zombieIconPrefab;
+
+    [Header("Other UI")]
+    public AudioSettingsUI audioSettingsUI;
+    public GameObject audioSettingsButton;
 
     private List<GameObject> spawnedIcons = new List<GameObject>();
 
@@ -30,23 +37,42 @@ public class ZombieUIManager : MonoBehaviour
         {
             CloseZombieList();
         }
+
+        if(Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleZombieList();
+        }
+
+        if(!zombieListPanel.activeSelf && infoPanel.activeSelf)
+        {
+            HideZombieInfo();
+        }
     }
     public void ToggleZombieList()
     {
         bool isActive = !zombieListPanel.activeSelf;
         zombieListPanel.SetActive(isActive);
+        backgroundImage.SetActive(isActive); 
 
         if (isActive)
         {
-          
-            Time.timeScale = 0f;
+            if (audioSettingsUI != null)
+                audioSettingsUI.ExitSettings();
+            if (audioSettingsButton != null)
+                audioSettingsButton.SetActive(false);
+
+
+            Time.timeScale = 0f; 
         }
         else
         {
-        
-            Time.timeScale = 1f;
+            if (audioSettingsButton != null)
+                audioSettingsButton.SetActive(true);
+
+            Time.timeScale = 1f; 
         }
     }
+
 
 
     public void AddZombieIcon(ZombieData data)
@@ -76,7 +102,7 @@ public class ZombieUIManager : MonoBehaviour
     {
         infoPanel.SetActive(true);
         nameText.text = data.zombieName;
-        statsText.text = $"Máu: {data.maxHealth}\nTốc độ: {data.moveSpeed}\nSát thương: {data.damage}";
+        statsText.text = $"Hp: {data.maxHealth}\nSpeed: {data.moveSpeed}\nDamage: {data.damage}";
         descriptionText.text = data.description;
         zombieImage.sprite = data.zombieSprite;
     }
@@ -90,7 +116,11 @@ public class ZombieUIManager : MonoBehaviour
     {
         zombieListPanel.SetActive(false);
         infoPanel.SetActive(false);
-        Time.timeScale = 1f;
+        backgroundImage.SetActive(false);
+        if (audioSettingsButton != null)
+            audioSettingsButton.SetActive(true);
 
+        Time.timeScale = 1f;
     }
+
 }

@@ -18,17 +18,17 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: vanguard_diffuse1
-    second: {fileID: 2800000, guid: 1a1fd5b095c8b064ab794af8d6de9b05, type: 3}
+    second: {fileID: 2800000, guid: 56e80b9b56a7c514aa73c81a86fa52bb, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: vanguard_normal
-    second: {fileID: 2800000, guid: 88c8bfaa72e4bcb41ab714e47052dac2, type: 3}
+    second: {fileID: 2800000, guid: d76c78b9fc02ec54599371de888876cc, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: vanguard_specular
-    second: {fileID: 2800000, guid: cf9274f85fe9fd945bdec99b9126e344, type: 3}
+    second: {fileID: 2800000, guid: dec3a140fdf05f94f82454293aca3dae, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

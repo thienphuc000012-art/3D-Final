@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+
 public class SpawnZombieManager : MonoBehaviour
 {
     [Header("Zombie Prefabs Walk/Run")]
@@ -40,42 +41,131 @@ public class SpawnZombieManager : MonoBehaviour
     private int healthBonus = 0;
 
     [Header("Player Settings")]
-    public PlayerHealth sharedPlayerHealth; 
+    public PlayerHealth sharedPlayerHealth;
 
     private int aliveZombies = 0;
-    private int phase = 1; 
+    private int phase = 1;
+
+    // quản lý số lượng spawn
+    private int zombiesToSpawnThisPhase;
+    private int zombiesSpawned;
+    private int zombiesPerPhase1;
 
     [Header("UI Settings")]
     public WaveMessageUI waveMessageUI;
     public ZombieUIManager zombieUIManager;
+
+    [Header("Wave UI")]
+    public WaveUIManager waveUIManager;
+
+    [Header("Wave Control UI")]
+    public GameObject nextWavePanel; 
+
+    [Header("Audio Settings")]
+    public AudioSource audioSource;
+    public AudioClip zombieComingClip;
+
+    public AudioSource musicSource;
+    public AudioClip backgroundMusicClipPhase1; 
+    public AudioClip backgroundMusicClipPhase2;
+
+
+    public GameObject Pitch;
+    public GameObject target;
+    public GameObject audioSetting;
+    public GameObject zombieInfo;
+    
+    //-----------------------------------
+    private void Awake()
+    {
+        currentWave = PlayerRuntime.Instance.Player.Wave;
+    }
+    //-----------------------------------
+
+
     void Start()
     {
         UpdateZombieCountByWave();
         StartCoroutine(StartWavePhase(spawnInterval));
     }
 
+
+    //-----------------------------------
     void Update()
     {
-        if (waveEnded && Keyboard.current.spaceKey.wasPressedThisFrame)
-        {
-            waveEnded = false;
-            currentWave++;
-            UpdateZombieCountByWave();
-
-            if (currentWave % 5 == 0)
-            {
-                healthBonus += 100;
-                Debug.Log("Tăng máu cho tất cả enemy thêm 100. Tổng bonus: " + healthBonus);
-            }
-
-            StartCoroutine(StartWavePhase(spawnInterval));
+        PlayerRuntime.Instance.Player.Wave = currentWave;
+        if(target.GetComponent<PlayerHealth>().gameOverPanel.activeSelf 
+            || nextWavePanel.activeSelf 
+            || audioSetting.GetComponent<AudioSettingsUI>().settingsPanel.activeSelf 
+            || zombieInfo.GetComponent<ZombieUIManager>().zombieListPanel.activeSelf)
+        {            
+            Pitch.GetComponent<MouseLook>().LockCursor(false);
         }
+        else
+        {
+            Pitch.GetComponent<MouseLook>().LockCursor(true);
+        }
+    }
+    //-----------------------------------
+
+    public void StartNextWave()
+    {
+        if (nextWavePanel != null)
+            nextWavePanel.SetActive(false);
+
+        waveEnded = false;
+        currentWave++;
+        UpdateZombieCountByWave();
+
+        if (currentWave % 5 == 0)
+        {
+            healthBonus += 100;
+            Debug.Log("Tăng máu cho tất cả enemy thêm 100. Tổng bonus: " + healthBonus);
+        }
+
+        StartCoroutine(StartWavePhase(spawnInterval));
     }
 
     IEnumerator StartWavePhase(float interval)
     {
+       if (phase == 1 && audioSource != null && zombieComingClip != null)
+    {
+        audioSource.PlayOneShot(zombieComingClip);
+    }
+
+
+
+        if (phase == 1 && musicSource != null && backgroundMusicClipPhase1 != null)
+        {
+            musicSource.clip = backgroundMusicClipPhase1;
+            musicSource.loop = true;
+            musicSource.Play();
+        }
+        else if (phase == 2 && musicSource != null && backgroundMusicClipPhase2 != null)
+        {
+            musicSource.clip = backgroundMusicClipPhase2;
+            musicSource.loop = true;
+            musicSource.Play();
+        }
+
         spawning = true;
-        int zombiesToSpawn = zombiesPerWave;
+
+        int zombiesToSpawn;
+
+
+        if (phase == 1)
+        {
+            zombiesToSpawn = zombiesPerWave;
+            zombiesPerPhase1 = zombiesToSpawn;
+            int totalZombiesInWave = zombiesPerPhase1 * 2;
+
+            waveUIManager.InitWave(currentWave, totalZombiesInWave);
+
+        }
+        else
+        {
+            zombiesToSpawn = zombiesPerPhase1;
+        }
 
         Debug.Log("=== Bắt đầu Wave " + currentWave + " - Phase " + phase + " với " + zombiesToSpawn + " zombie ===");
 
@@ -117,6 +207,9 @@ public class SpawnZombieManager : MonoBehaviour
             spawnList.Add(prefab);
         }
 
+        zombiesToSpawnThisPhase = spawnList.Count;
+        zombiesSpawned = 0;
+
         List<int> usedLanes = new List<int>();
 
         foreach (GameObject prefab in spawnList)
@@ -143,19 +236,23 @@ public class SpawnZombieManager : MonoBehaviour
                 zm.startHealth += healthBonus;
                 zm.sharedPlayerHealth = sharedPlayerHealth;
 
-                // Khi zombie chết thì giảm aliveZombies
                 zm.GetComponent<Health>().OnDeath += () =>
                 {
                     aliveZombies--;
-                    if (aliveZombies <= 0) OnPhaseEnd();
+                    Debug.Log("Zombie chết, còn lại: " + aliveZombies);
+
+                    if (aliveZombies <= 0 && zombiesSpawned >= zombiesToSpawnThisPhase)
+                    {
+                        OnPhaseEnd();
+                    }
                 };
                 zombieUIManager.AddZombieIcon(zm.zombieData);
-
             }
 
             aliveZombies++;
+            zombiesSpawned++;
+            waveUIManager.OnZombieSpawned();
 
-           // Debug.Log("Spawn zombie " + prefab.name + " tại lane " + laneIndex + " offset Z: " + offset);
 
             yield return new WaitForSeconds(interval);
 
@@ -164,6 +261,11 @@ public class SpawnZombieManager : MonoBehaviour
         }
 
         spawning = false;
+
+        if (aliveZombies <= 0)
+        {
+            OnPhaseEnd();
+        }
     }
 
     private void OnPhaseEnd()
@@ -171,26 +273,43 @@ public class SpawnZombieManager : MonoBehaviour
         if (phase == 1)
         {
             waveMessageUI?.ShowMessage("A huge wave of zombie is approaching!");
-            StartCoroutine(StartPhase2());
+            phase = 2;
+            if (audioSource != null && zombieComingClip != null)
+            {
+                audioSource.PlayOneShot(zombieComingClip);
+            }
+
+            StartCoroutine(StartPhase2Delay()); 
         }
         else
         {
             waveEnded = true;
             phase = 1;
             waveMessageUI?.ShowMessage("=== Kết thúc Wave " + currentWave + " ===");
-        }
-    }
+            if (musicSource != null && musicSource.isPlaying)
+            {
+                musicSource.Stop();
+            }
+            if (nextWavePanel != null)
+                nextWavePanel.SetActive(true);
 
-    private IEnumerator StartPhase2()
-    {
-        yield return new WaitForSeconds(5f);
-        waveMessageUI?.ShowMessage("Final wave!");
-        phase = 2;
-        StartCoroutine(StartWavePhase(spawnInterval * 0.5f));
+
+        }
     }
 
     private void UpdateZombieCountByWave()
     {
-        zombiesPerWave = currentWave * 5; 
+        zombiesPerWave = currentWave * 5;
+    }
+    private IEnumerator StartPhase2Delay()
+    {
+
+        yield return new WaitForSeconds(3f);
+
+        waveMessageUI?.ShowMessage("Final wave!");
+
+        yield return new WaitForSeconds(2f);
+
+        StartCoroutine(StartWavePhase(spawnInterval * 0.5f));
     }
 }

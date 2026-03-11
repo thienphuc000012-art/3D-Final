@@ -67,6 +67,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieHitbox
   hitboxType: 1
+  headshotParticles: {fileID: 0}
 --- !u!1 &3293615325353614707
 GameObject:
   m_ObjectHideFlags: 0
@@ -201,7 +202,6 @@ MonoBehaviour:
   attackClip: {fileID: 8300000, guid: b7e483c72067d3d44b46de92e73b6452, type: 3}
   hitClip: {fileID: 8300000, guid: 7a2d9634472ce4c4e96cd9b3fde38c4f, type: 3}
   deathClip: {fileID: 8300000, guid: 718436be7a84dc14089c5d1222026312, type: 3}
-  volume: 0.7
 --- !u!1 &5660525692119464933
 GameObject:
   m_ObjectHideFlags: 0
@@ -269,6 +269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieHitbox
   hitboxType: 0
+  headshotParticles: {fileID: 5024009746357069192, guid: 30dc49dedd304db4eb2fc35714fc2c4b, type: 3}
 --- !u!1001 &7227624757906389316
 PrefabInstance:
   m_ObjectHideFlags: 0
