@@ -58,7 +58,8 @@ public class UpdateCanvas : MonoBehaviour
         if (player != null)
         {
             currentAmmo = player.transform.Find("GunLogic").GetComponent<Gun>().currentAmmo;
-            maxAmmo = player.transform.Find("GunLogic").GetComponent<Gun>().magazineSize;
+            //maxAmmo = player.transform.Find("GunLogic").GetComponent<Gun>().magazineSize;
+            maxAmmo = gunData.magazineSize;
             ExpText.text = "Exp: " + PlayerRuntime.Instance.Player.Exp.ToString();
             feeText.text = (PlayerRuntime.Instance.Player.Gun.level *1000).ToString() + " Exp";
         }
@@ -73,7 +74,7 @@ public class UpdateCanvas : MonoBehaviour
     }
     void UpdateGunData()
     {
-        if (PlayerRuntime.Instance.Player.Gun.level > 2)
+        if (PlayerRuntime.Instance.Player.Gun.level > 1)
         {
             gunData.level = PlayerRuntime.Instance.Player.Gun.level;
             gunData.damage = PlayerRuntime.Instance.Player.Gun.damage;
@@ -99,6 +100,7 @@ public class UpdateCanvas : MonoBehaviour
         reloadTime = gunData.reloadTime;
         bulletSpeed = gunData.bulletSpeed;
         magazineSize = gunData.magazineSize;
+
         //currentAmmo = magazineSize;        
     }
     void CurGunStatsText()
@@ -110,7 +112,7 @@ public class UpdateCanvas : MonoBehaviour
     }
     void NextGunStatsText()
     {
-        int lv = level - 1;
+        int lv = level;
 
         nextDamageText.text = (gunData.damage * (1f + 0.5f * lv)).ToString("F1");
         nextFireRateText.text = (gunData.fireRate * (1f - 0.15f * lv)).ToString("F2") + "s";

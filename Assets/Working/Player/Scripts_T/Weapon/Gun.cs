@@ -127,13 +127,13 @@ public class Gun : MonoBehaviour
         reloadTime = gunData.reloadTime;
         bulletSpeed = gunData.bulletSpeed;
         magazineSize = gunData.magazineSize;
-        currentAmmo = magazineSize;
+        currentAmmo = PlayerRuntime.Instance.Player.Gun.magazineSize;
     }
 
     void ResetGunToLevel1()
     {
         level = PlayerRuntime.Instance.Player.Gun.level < 2 ? 1 : PlayerRuntime.Instance.Player.Gun.level;
-        ApplyStatsByLevel();
+        //ApplyStatsByLevel();
         UpdateGunVisual();
     }
 
@@ -438,7 +438,7 @@ public class Gun : MonoBehaviour
 
     void FinishReload()
     {
-        currentAmmo = magazineSize;
+        currentAmmo = gunData.magazineSize;
         isReloading = false;
         forceHipByReload = false;
 
@@ -469,6 +469,8 @@ public class Gun : MonoBehaviour
         gunData.magazineSize = gunData.magazineSize + lv *5;
 
         fireCooldown = gunData.fireRate * (1f - 0.15f * lv);
+
+        gunData.fireRate = fireCooldown;
 
         UpdateGunData();
         currentAmmo = magazineSize;
