@@ -37,6 +37,16 @@ public class ZombieUIManager : MonoBehaviour
         {
             CloseZombieList();
         }
+
+        if(Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleZombieList();
+        }
+
+        if(!zombieListPanel.activeSelf && infoPanel.activeSelf)
+        {
+            HideZombieInfo();
+        }
     }
     public void ToggleZombieList()
     {

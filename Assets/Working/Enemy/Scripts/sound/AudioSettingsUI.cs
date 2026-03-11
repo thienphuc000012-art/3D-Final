@@ -13,6 +13,14 @@ public class AudioSettingsUI : MonoBehaviour
 
     private bool isOpen = false;
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleSettings();
+        }
+    }
+
     public void ToggleSettings()
     {
         isOpen = !isOpen;

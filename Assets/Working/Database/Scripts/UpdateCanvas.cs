@@ -65,10 +65,10 @@ public class UpdateCanvas : MonoBehaviour
 
         Ammotext.text = currentAmmo + "/" + maxAmmo;    
         
-        if(Input.GetKeyDown(KeyCode.Tab))
-        {
-            ToggleUpgradePanel();
-        }
+        //if(Input.GetKeyDown(KeyCode.Tab))
+        //{
+        //    ToggleUpgradePanel();
+        //}
 
     }
     void UpdateGunData()

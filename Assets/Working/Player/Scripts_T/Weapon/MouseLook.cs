@@ -36,10 +36,10 @@ public class MouseLook : MonoBehaviour
     void Update()
     {
         // ===== TOGGLE CURSOR =====
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            LockCursor(!isCursorLocked);
-        }
+        //if (Input.GetKeyDown(KeyCode.Escape))
+        //{
+        //    LockCursor(!isCursorLocked);
+        //}
 
         // Nếu chuột đang mở thì không xoay camera
         if (!isCursorLocked)

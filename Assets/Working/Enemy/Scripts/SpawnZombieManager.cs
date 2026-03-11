@@ -69,8 +69,11 @@ public class SpawnZombieManager : MonoBehaviour
     public AudioClip backgroundMusicClipPhase1; 
     public AudioClip backgroundMusicClipPhase2;
 
-    
-    
+
+    public GameObject Pitch;
+    public GameObject target;
+    public GameObject audioSetting;
+    public GameObject zombieInfo;
     
     //-----------------------------------
     private void Awake()
@@ -91,6 +94,17 @@ public class SpawnZombieManager : MonoBehaviour
     void Update()
     {
         PlayerRuntime.Instance.Player.Wave = currentWave;
+        if(target.GetComponent<PlayerHealth>().gameOverPanel.activeSelf 
+            || nextWavePanel.activeSelf 
+            || audioSetting.GetComponent<AudioSettingsUI>().settingsPanel.activeSelf 
+            || zombieInfo.GetComponent<ZombieUIManager>().zombieListPanel.activeSelf)
+        {            
+            Pitch.GetComponent<MouseLook>().LockCursor(false);
+        }
+        else
+        {
+            Pitch.GetComponent<MouseLook>().LockCursor(true);
+        }
     }
     //-----------------------------------
 
